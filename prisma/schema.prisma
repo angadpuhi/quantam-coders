@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Worker {
+  id                    String         @id @default(cuid())
+  healthId              String         @unique
+  awaazId               String?        @unique // Kerala Awaaz Health Insurance ID
+  fullName              String
+  dateOfBirth           DateTime?
+  gender                String
+  bloodGroup            String?
+  phone                 String?
+  stateOfOrigin         String         // e.g. West Bengal, Assam, Bihar, Odisha
+  nativeLanguage        String         // e.g. Bengali, Hindi, Assamese, Odia
+  keralaDistrict        String         // e.g. Ernakulam, Kozhikode, Thiruvananthapuram
+  localAddress          String?
+  currentEmployer       String?
+  occupation            String?        // e.g. Construction, Plywood Mill, Agriculture, Hospitality
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  allergies             String?
+  chronicConditions     String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+
+  healthRecords         HealthRecord[]
+  vaccinations          Vaccination[]
+}
+
+model HealthRecord {
+  id           String   @id @default(cuid())
+  workerId     String
+  worker       Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  facilityName String   // e.g., Perumbavoor CHC, Ernakulam General Hospital
+  doctorName   String
+  visitDate    DateTime @default(now())
+  visitType    String   // General Checkup, Emergency, Occupational Screening, Follow-up
+  symptoms     String
+  diagnosis    String
+  prescription String?
+  vitalSigns   String?  // e.g. "BP: 120/80, Pulse: 72, SpO2: 98%, Temp: 98.6F"
+  notes        String?
+  createdAt    DateTime @default(now())
+}
+
+model Vaccination {
+  id               String    @id @default(cuid())
+  workerId         String
+  worker           Worker    @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  vaccineName      String    // e.g., Tetanus Toxoid, Hepatitis B, COVID-19, Typhoid
+  doseNumber       Int       @default(1)
+  administeredDate DateTime  @default(now())
+  nextDueDate      DateTime?
+  administeredAt   String    // Healthcare centre or Mobile Camp name
+  batchNumber      String?
+  createdAt        DateTime  @default(now())
+}
