@@ -233,9 +233,16 @@ export function SahaayakTerminal() {
     if (lower === "help" || lower === "commands" || lower === "menu" || lower === "?") {
       responseItem = {
         commandKey: "help",
-        text: `${t("cmdHelpTitle")}\n\n• login     - ${t("cmdLoginTitle")}\n• register  - ${t("cmdRegisterTitle")}\n• health-id - ${t("cmdHealthIdTitle")}\n• qr        - ${t("cmdQrTitle")}\n• records   - ${t("cmdRecordsTitle")}\n• language  - ${t("cmdLanguageTitle")}\n• profile   - ${t("cmdProfileTitle")}\n• password  - ${t("cmdPasswordTitle")}\n• contact   - ${t("cmdContactTitle")}\n• clear     - Clear terminal buffer`,
+        text: `${t("cmdHelpTitle")}\n\n• login        - ${t("cmdLoginTitle")}\n• register     - ${t("cmdRegisterTitle")}\n• health-id    - ${t("cmdHealthIdTitle")}\n• qr           - ${t("cmdQrTitle")}\n• records      - ${t("cmdRecordsTitle")}\n• appointments - Clinic & Camp Appointments\n• language     - ${t("cmdLanguageTitle")}\n• profile      - ${t("cmdProfileTitle")}\n• password     - ${t("cmdPasswordTitle")}\n• contact      - ${t("cmdContactTitle")}\n• clear        - Clear terminal buffer`,
       };
-    } else if (lower.includes("login") || lower.includes("sign in") || lower.includes("auth")) {
+    } else if (lower.includes("appointment") || lower.includes("follow") || lower.includes("schedule") || lower.includes("booking")) {
+      responseItem = {
+        commandKey: "appointments",
+        text: `📅 Clinic Appointments & Follow-ups\nView upcoming scheduled appointments, specialist follow-up referrals, and past consultations across Kerala facilities.`,
+        actionLink: "/appointments",
+        actionLabel: "Open Appointments",
+      };
+    } else if (lower.includes("login") || lower.includes("sign in") || lower.includes("auth") || lower.includes("provider")) {
       responseItem = {
         commandKey: "login",
         text: `🔐 ${t("cmdLoginTitle")}\n${t("cmdLoginDesc")}`,
@@ -327,6 +334,7 @@ export function SahaayakTerminal() {
     "health-id",
     "qr",
     "records",
+    "appointments",
     "language",
     "profile",
     "password",

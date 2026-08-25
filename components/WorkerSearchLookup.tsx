@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { AddClinicalRecordForm } from "@/components/AddClinicalRecordForm";
+import { CameraQrScanner } from "@/components/CameraQrScanner";
+import { Camera, QrCode } from "lucide-react";
 
 export function WorkerSearchLookup() {
   const t = useTranslations("search");
@@ -33,6 +35,7 @@ export function WorkerSearchLookup() {
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
   const [showAddRecord, setShowAddRecord] = useState(false);
+  const [showCameraScanner, setShowCameraScanner] = useState(false);
 
   const handleSearch = async (term?: string) => {
     const query = (term !== undefined ? term : searchTerm).trim();
@@ -81,10 +84,24 @@ export function WorkerSearchLookup() {
     handleSearch(term);
   };
 
+  const handleQrScanned = (healthId: string) => {
+    setShowCameraScanner(false);
+    setSearchTerm(healthId);
+    handleSearch(healthId);
+  };
+
   return (
     <div className="space-y-6">
+      {/* Camera QR Scanner Modal */}
+      {showCameraScanner && (
+        <CameraQrScanner
+          onScanSuccess={handleQrScanned}
+          onClose={() => setShowCameraScanner(false)}
+        />
+      )}
+
       {/* Search Bar - Houseboat Window Arched Layout */}
-      <div className="bg-white border border-kerala-coir-200 rounded-houseboat p-6 sm:p-7 shadow-xs relative overflow-hidden">
+      <div className="bg-white border border-kerala-coir-200 rounded-houseboat p-5 sm:p-7 shadow-xs relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -92,7 +109,7 @@ export function WorkerSearchLookup() {
               <span>{t("title")}</span>
             </h2>
             <p className="text-xs text-slate-600 mt-0.5">
-              {t("subtitle")}
+              Search by Portable Health ID, name, or phone — or use your camera to scan the QR code.
             </p>
           </div>
 
@@ -123,13 +140,13 @@ export function WorkerSearchLookup() {
           </div>
         </div>
 
-        {/* Search Input Box */}
+        {/* Search Input Box with Camera QR Scanner Button */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSearch();
           }}
-          className="flex flex-col sm:flex-row gap-3"
+          className="flex flex-col sm:flex-row gap-2.5"
         >
           <div className="relative flex-1">
             <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -138,13 +155,24 @@ export function WorkerSearchLookup() {
               placeholder={t("inputPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition"
+              className="w-full pl-11 pr-4 py-3 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition min-h-[48px]"
             />
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCameraScanner(true)}
+            className="inline-flex items-center justify-center gap-2 bg-[#0f3e17] hover:bg-[#0c2f10] text-white font-bold px-4 py-3 rounded-xl text-xs sm:text-sm shadow-md transition shrink-0 min-h-[48px] border border-emerald-600/40"
+            title="Scan Health ID with Camera"
+          >
+            <Camera className="w-4 h-4 text-emerald-300 animate-pulse" />
+            <span>Scan QR Code</span>
+          </button>
+
           <button
             type="submit"
             disabled={loading}
-            className="bg-kerala-green-800 hover:bg-kerala-green-900 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl text-sm shadow-xs transition flex items-center justify-center gap-2"
+            className="bg-kerala-green-800 hover:bg-kerala-green-900 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl text-sm shadow-xs transition flex items-center justify-center gap-2 min-h-[48px]"
           >
             {loading ? <span>{t("searchingButton")}</span> : <span>{t("searchButton")}</span>}
           </button>

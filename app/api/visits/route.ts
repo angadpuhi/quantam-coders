@@ -46,10 +46,10 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/visits - PROTECTED: Requires STAFF or ADMIN role
+// POST /api/visits - PROTECTED: Requires PROVIDER or ADMIN role
 export async function POST(request: Request) {
   try {
-    const authError = await requireAuth(["STAFF", "ADMIN"]);
+    const authError = await requireAuth(["PROVIDER", "ADMIN"]);
     if (authError) return authError;
 
     let body;

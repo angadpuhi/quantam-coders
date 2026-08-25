@@ -18,6 +18,7 @@ import {
   HeartHandshake,
   ArrowRight,
   PhoneCall,
+  Calendar,
 } from "lucide-react";
 
 export function Navbar() {
@@ -139,6 +140,14 @@ export function Navbar() {
                 {t("records")}
               </Link>
               <Link
+                href="/appointments"
+                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                  isActive("/appointments") ? "text-[#0f3e17] font-semibold" : ""
+                }`}
+              >
+                Appointments
+              </Link>
+              <Link
                 href="/schemes"
                 className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
                   isActive("/schemes") ? "text-[#0f3e17] font-semibold" : ""
@@ -166,16 +175,16 @@ export function Navbar() {
 
             {/* Right CTAs */}
             <div className="flex items-center gap-3">
-              {/* Staff Login / Session */}
+              {/* Provider Login / Session */}
               {status === "authenticated" && session ? (
                 <div className="flex items-center gap-2">
                   <div className="hidden sm:flex flex-col text-right">
                     <span className="text-xs font-semibold text-[#0f3e17] leading-tight">
-                      {session.user?.name || "Staff Member"}
+                      {session.user?.name || "Healthcare Provider"}
                     </span>
                     <span className="text-[10px] text-slate-500 flex items-center justify-end gap-1">
                       <Shield className="w-2.5 h-2.5 text-[#0f3e17]" />
-                      {(session.user as any)?.role || "STAFF"}
+                      {(session.user as any)?.role === "PROVIDER" ? "PROVIDER" : ((session.user as any)?.role || "PROVIDER")}
                     </span>
                   </div>
                   <button
@@ -252,6 +261,14 @@ export function Navbar() {
               >
                 <FolderOpen className="w-3.5 h-3.5" />
                 <span>{t("records")}</span>
+              </Link>
+              <Link
+                href="/appointments"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Appointments</span>
               </Link>
               <Link
                 href="/schemes"

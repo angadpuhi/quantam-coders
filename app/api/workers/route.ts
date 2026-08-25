@@ -93,11 +93,11 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/workers - PROTECTED: Requires STAFF or ADMIN role
+// POST /api/workers - PROTECTED: Requires PROVIDER or ADMIN role
 export async function POST(request: Request) {
   try {
-    // Role check: Only STAFF or ADMIN can register workers
-    const authError = await requireAuth(["STAFF", "ADMIN"]);
+    // Role check: Only PROVIDER or ADMIN can register workers
+    const authError = await requireAuth(["PROVIDER", "ADMIN"]);
     if (authError) return authError;
 
     let body;
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, dob, gender, phone, homeState, currentAddress, portableHealthId, riskStatus } = body;
+    const { name, dob, gender, phone, homeState, district, currentAddress, portableHealthId, riskStatus } = body;
 
     // Field validation
     const missingFields: string[] = [];
@@ -170,6 +170,10 @@ export async function POST(request: Request) {
       ? riskStatus.toUpperCase()
       : "GREEN";
 
+    const finalDistrict = district && typeof district === "string" && district.trim()
+      ? district.trim()
+      : "Ernakulam";
+
     const newWorker = await prisma.worker.create({
       data: {
         name: name.trim(),
@@ -177,6 +181,7 @@ export async function POST(request: Request) {
         gender: gender.trim(),
         phone: phone ? String(phone).trim() : null,
         homeState: homeState.trim(),
+        district: finalDistrict,
         currentAddress: currentAddress ? String(currentAddress).trim() : null,
         portableHealthId: finalHealthId,
         riskStatus: finalRisk,

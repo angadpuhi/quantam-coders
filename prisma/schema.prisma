@@ -15,7 +15,7 @@ model User {
   name       String
   email      String    @unique
   password   String    // Hashed with bcrypt
-  role       String    @default("STAFF") // "STAFF" or "ADMIN"
+  role       String    @default("PROVIDER") // "PROVIDER" (Healthcare Provider) or "ADMIN" (Directorate Admin)
   facilityId String?
   facility   Facility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
   createdAt  DateTime  @default(now())
@@ -29,6 +29,7 @@ model Worker {
   gender           String
   phone            String?
   homeState        String
+  district         String      @default("Ernakulam") // Kerala District (e.g., Ernakulam, Kozhikode, Palakkad, Thiruvananthapuram)
   currentAddress   String?
   portableHealthId String      @unique
   riskStatus       String      @default("GREEN") // "GREEN" (Stable), "YELLOW" (Needs Monitoring), "RED" (Urgent)
