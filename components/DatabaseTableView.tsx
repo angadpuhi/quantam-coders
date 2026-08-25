@@ -124,7 +124,7 @@ export function DatabaseTableView() {
               </h1>
             </div>
             <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-              SQLite Database: <code className="text-emerald-400">dev.db</code> • Model Engine: Prisma v6.19.3 • Role: ADMIN
+              PostgreSQL Database: <code className="text-emerald-400">env(DATABASE_URL)</code> • Model Engine: Prisma v6.19.3 • Role: ADMIN
             </p>
           </div>
         </div>
