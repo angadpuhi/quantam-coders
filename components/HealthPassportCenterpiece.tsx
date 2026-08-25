@@ -25,6 +25,7 @@ import {
   MapPin,
   Clock,
   Award,
+  Lock,
 } from "lucide-react";
 import { KeralaMotif, KeralaPalmIcon } from "@/components/KeralaMotif";
 import { RiskStatusBadge } from "@/components/RiskStatusBadge";
@@ -272,6 +273,19 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
                     {t("dpdpProtected")}
                   </span>
                 </div>
+              </div>
+
+              {/* Clickable Privacy & Trust Badge linking to /privacy */}
+              <div className="pt-2">
+                <Link
+                  href="/privacy"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/50 text-emerald-200 text-xs font-semibold shadow-xs transition group"
+                >
+                  <Lock className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                  <span className="font-extrabold text-emerald-300">Your Data, Your Control</span>
+                  <span className="text-[10px] text-slate-300 hidden sm:inline">• DPDP Protected • Never Shared with Employers</span>
+                  <ChevronRight className="w-3 h-3 text-emerald-400 ml-auto" />
+                </Link>
               </div>
             </div>
           </div>
