@@ -38,6 +38,21 @@ model Worker {
   visits           Visit[]
   screenings       Screening[]
   treatments       Treatment[]
+  healthChecks     HealthCheck[]
+}
+
+model HealthCheck {
+  id               String    @id @default(cuid())
+  workerId         String
+  score            Int       @default(0)
+  riskStatus       String    @default("GREEN") // "GREEN" | "YELLOW" | "RED"
+  flaggedForDoctor Boolean   @default(false)
+  answers          String    // JSON stringified question responses
+  notes            String?
+  date             DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+
+  worker           Worker    @relation(fields: [workerId], references: [id], onDelete: Cascade)
 }
 
 model Facility {
