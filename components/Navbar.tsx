@@ -203,7 +203,7 @@ export function Navbar() {
                   className="hidden sm:inline-flex items-center gap-1.5 border border-[#0f3e17] text-[#0f3e17] hover:bg-[#e1f4df]/60 font-medium px-3.5 py-2 rounded-card text-xs transition"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>{t("staffLogin")}</span>
+                  <span>{t("login")}</span>
                 </Link>
               )}
 
@@ -310,7 +310,7 @@ export function Navbar() {
                 onClick={() => setMobileMenuOpen(false)}
                 className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
               >
-                {t("staffLogin")}
+                {t("login")}
               </Link>
               <Link
                 href="/registry"
