@@ -16,6 +16,20 @@
     "signOut": "Sign Out",
     "languages": "Languages"
   },
+  "voiceInput": {
+    "prompt": "Tap and speak in your language — no typing needed",
+    "title": "Speak Your Health History",
+    "subtitle": "Voice-enabled clinical speech-to-text in Malayalam, Hindi, Bengali, Odia & English",
+    "listening": "Listening... Speak your symptoms clearly now",
+    "startVoice": "Tap to Speak",
+    "stopVoice": "Stop Listening",
+    "insertText": "Insert into Clinical Notes",
+    "clearText": "Clear",
+    "selectLanguage": "Spoken Language:",
+    "placeholder": "Transcribed voice symptoms will appear here in real-time...",
+    "populatedSuccess": "Voice transcript added to form!",
+    "trySample": "Try Sample Voice Input:"
+  },
   "healthPassport": {
     "tagline": "Carry your health record across states and jobs",
     "passportTitle": "Athidhi Swasthya Passport",

@@ -17,7 +17,9 @@ import {
   PlusCircle,
   LogIn,
   ArrowRight,
+  Mic,
 } from "lucide-react";
+import { VoiceInputWidget } from "@/components/VoiceInputWidget";
 
 interface AddClinicalRecordFormProps {
   workerId: string;
@@ -359,10 +361,24 @@ export function AddClinicalRecordForm({
 
         {/* Tab 1: Clinical Visit Fields */}
         {activeTab === "visit" && (
-          <div>
+          <div className="space-y-2">
             <label className="block text-xs font-bold text-slate-800 mb-1">
               {t("visitNotesLabel")} <span className="text-red-500">*</span>
             </label>
+
+            {/* Inline Speech-to-Text Voice Dictation */}
+            <VoiceInputWidget
+              mode="inline"
+              onInsertToField={(text) => {
+                setVisitNotes((prev) => (prev ? `${prev} ${text}` : text));
+              }}
+              onTranscriptChange={(text) => {
+                if (text && !visitNotes) {
+                  setVisitNotes(text);
+                }
+              }}
+            />
+
             <textarea
               rows={3}
               required
@@ -438,10 +454,24 @@ export function AddClinicalRecordForm({
         {/* Tab 3: Treatment Plan Fields */}
         {activeTab === "treatment" && (
           <div className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-800 mb-1">
                 {t("treatmentDescLabel")} <span className="text-red-500">*</span>
               </label>
+
+              {/* Inline Speech-to-Text Voice Dictation */}
+              <VoiceInputWidget
+                mode="inline"
+                onInsertToField={(text) => {
+                  setTreatmentDescription((prev) => (prev ? `${prev} ${text}` : text));
+                }}
+                onTranscriptChange={(text) => {
+                  if (text && !treatmentDescription) {
+                    setTreatmentDescription(text);
+                  }
+                }}
+              />
+
               <input
                 type="text"
                 required
