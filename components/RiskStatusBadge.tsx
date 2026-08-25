@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, AlertTriangle, AlertOctagon, ShieldCheck, Activity } from "lucide-react";
 
 export type RiskLevel = "GREEN" | "YELLOW" | "RED" | string;
@@ -18,6 +19,7 @@ export function RiskStatusBadge({
   size = "md",
   className = "",
 }: RiskStatusBadgeProps) {
+  const t = useTranslations("riskBadge");
   const normalizedStatus = (status || "GREEN").toUpperCase();
 
   const isGreen = normalizedStatus === "GREEN" || normalizedStatus === "STABLE";
@@ -57,7 +59,7 @@ export function RiskStatusBadge({
           <span className={`relative inline-flex rounded-full ${dotSizes} bg-red-600`} />
         </span>
         <AlertOctagon className={`${iconSizes} text-red-500 shrink-0`} />
-        <span className="truncate">Red • Urgent (Clinical Attention)</span>
+        <span className="truncate">{t("redLabel")}</span>
       </div>
     );
   }
@@ -76,7 +78,7 @@ export function RiskStatusBadge({
           <span className={`relative inline-flex rounded-full ${dotSizes} bg-amber-500`} />
         </span>
         <AlertTriangle className={`${iconSizes} text-amber-500 shrink-0`} />
-        <span className="truncate">Yellow • Needs Monitoring</span>
+        <span className="truncate">{t("yellowLabel")}</span>
       </div>
     );
   }
@@ -95,7 +97,7 @@ export function RiskStatusBadge({
         <span className={`relative inline-flex rounded-full ${dotSizes} bg-emerald-500`} />
       </span>
       <ShieldCheck className={`${iconSizes} text-emerald-600 shrink-0`} />
-      <span className="truncate">Green • Stable (Fit for Work)</span>
+      <span className="truncate">{t("greenLabel")}</span>
     </div>
   );
 }

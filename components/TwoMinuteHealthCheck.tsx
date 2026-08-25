@@ -309,7 +309,7 @@ const QUESTIONS: Question[] = [
 ];
 
 export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
-  const t = useTranslations("sections");
+  const t = useTranslations("healthCheck");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -525,10 +525,10 @@ export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <label className="block text-xs font-extrabold text-slate-900 uppercase tracking-wider mb-1">
-                  1. Select Enrolled Worker to Screen
+                  {t("targetWorkerLabel")}
                 </label>
                 <p className="text-xs text-slate-500">
-                  Choose an existing guest worker or select from the active register.
+                  {t("subtitle")}
                 </p>
               </div>
 
@@ -539,7 +539,7 @@ export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-900 hover:bg-emerald-100 border border-emerald-300 text-xs font-bold transition self-start sm:self-auto"
               >
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Quick-Fill All &ldquo;Normal / Negative&rdquo;</span>
+                <span>{t("autoFillNormalBtn")}</span>
               </button>
             </div>
 
@@ -587,7 +587,11 @@ export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
           <div className="bg-white border border-kerala-coir-200 rounded-2xl p-4 shadow-2xs">
             <div className="flex items-center justify-between text-xs font-bold mb-2">
               <span className="text-slate-800">
-                Screening Progress: {answeredCount} of {QUESTIONS.length} Questions Answered
+                {t("questionsProgress", {
+                  answered: answeredCount,
+                  total: QUESTIONS.length,
+                  percent: progressPercent,
+                })}
               </span>
               <span className="text-kerala-green-800 font-extrabold font-mono">
                 {progressPercent}%
@@ -691,13 +695,13 @@ export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
           {/* Optional Health Worker Notes */}
           <div className="bg-white border border-kerala-coir-200 rounded-2xl p-5 shadow-2xs space-y-2">
             <label className="block text-xs font-bold text-slate-800">
-              Optional Health Camp / Clinical Staff Notes:
+              {t("additionalNotesLabel")}
             </label>
             <textarea
               rows={2}
               value={customNotes}
               onChange={(e) => setCustomNotes(e.target.value)}
-              placeholder="e.g. Worker screened at Perumbavoor Industrial Mobile Camp. Advised N95 respirator and scheduled for spirometry follow-up."
+              placeholder={t("additionalNotesPlaceholder")}
               className="w-full p-3 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-kerala-green-700 focus:outline-hidden"
             />
           </div>
@@ -714,10 +718,10 @@ export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
           <div className="bg-kerala-green-950 text-white rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg border border-kerala-gold-500/40">
             <div>
               <p className="text-xs font-bold text-kerala-gold-300 uppercase tracking-wider">
-                Automated Triage & Risk Assignment
+                {t("badge")}
               </p>
               <p className="text-xs text-slate-300 mt-0.5">
-                Calculates severity score, assigns Green/Yellow/Red, and flags for medical follow-up.
+                {t("subtitle")}
               </p>
             </div>
 
@@ -727,10 +731,10 @@ export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
               className="w-full sm:w-auto bg-gradient-to-r from-kerala-gold-500 to-kerala-gold-600 hover:from-kerala-gold-600 hover:to-kerala-gold-700 disabled:opacity-50 text-slate-950 font-extrabold px-6 py-3 rounded-xl text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2"
             >
               {submitting ? (
-                <span>Calculating Triage Score...</span>
+                <span>{t("submittingBtn")}</span>
               ) : (
                 <>
-                  <span>Complete Health Check & Update Risk</span>
+                  <span>{t("submitBtn")}</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
