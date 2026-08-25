@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Activity, Languages, LogIn, LogOut, ShieldAlert, User, Stethoscope, UserPlus } from "lucide-react";
+import { Activity, Languages, LogIn, LogOut, ShieldAlert, User, Stethoscope, UserPlus, BarChart3 } from "lucide-react";
 
 export function Navbar() {
   const { data: session, status } = useSession();
@@ -53,6 +53,14 @@ export function Navbar() {
           >
             <UserPlus className="w-3.5 h-3.5 text-kerala-green-800" />
             <span>Register & Search</span>
+          </Link>
+
+          <Link
+            href="/admin"
+            className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-kerala-blue-900 bg-kerala-blue-50 border border-kerala-blue-200 px-3 py-1.5 rounded-lg hover:bg-kerala-blue-100 transition"
+          >
+            <BarChart3 className="w-3.5 h-3.5 text-kerala-blue-800" />
+            <span>Surveillance</span>
           </Link>
 
           {/* Auth State Button */}
