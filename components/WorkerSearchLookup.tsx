@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   Search,
   User,
@@ -17,8 +18,11 @@ import {
   ShieldCheck,
   ChevronRight,
   Sparkles,
+  PlusCircle,
+  ExternalLink,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { AddClinicalRecordForm } from "@/components/AddClinicalRecordForm";
 
 export function WorkerSearchLookup() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,6 +30,7 @@ export function WorkerSearchLookup() {
   const [workerData, setWorkerData] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState(false);
+  const [showAddRecord, setShowAddRecord] = useState(false);
 
   const handleSearch = async (term?: string) => {
     const query = (term !== undefined ? term : searchTerm).trim();
@@ -34,9 +39,10 @@ export function WorkerSearchLookup() {
     setLoading(true);
     setError(null);
     setSearched(true);
+    setShowAddRecord(false);
 
     try {
-      // First try fetching full history by identifier (supports ID or portableHealthId)
+      // First try fetching full history by identifier
       const res = await fetch(`/api/workers/${encodeURIComponent(query)}`);
       if (res.ok) {
         const json = await res.json();
@@ -52,7 +58,6 @@ export function WorkerSearchLookup() {
       const listJson = await listRes.json();
 
       if (listRes.ok && listJson.success && listJson.data?.length > 0) {
-        // Fetch full history for first match
         const firstMatch = listJson.data[0];
         const detailRes = await fetch(`/api/workers/${firstMatch.id}`);
         const detailJson = await detailRes.json();
@@ -155,7 +160,7 @@ export function WorkerSearchLookup() {
       {/* Result: Worker Profile & Visit History */}
       {workerData && (
         <div className="space-y-6 animate-in fade-in duration-300">
-          {/* Worker Profile Card - Houseboat Window Arched Geometry */}
+          {/* Worker Profile Card */}
           <div className="bg-white border-2 border-kerala-green-700/30 rounded-houseboat p-6 sm:p-8 shadow-sm relative overflow-hidden">
             {/* Top Backwater Coastal Accent */}
             <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-kerala-green-800 via-kerala-blue-800 to-kerala-gold-600" />
@@ -192,17 +197,41 @@ export function WorkerSearchLookup() {
                 )}
               </div>
 
-              {/* Local Worksite / Residence in Kerala */}
-              {workerData.currentAddress && (
-                <div className="bg-kerala-coir-50 border border-kerala-coir-200 rounded-2xl p-4 max-w-md text-xs">
-                  <div className="flex items-center gap-1.5 text-kerala-coir-900 font-bold mb-1">
-                    <MapPin className="w-3.5 h-3.5 text-kerala-green-800" />
-                    <span>Current Worksite / Residence (Kerala)</span>
-                  </div>
-                  <p className="text-slate-700 leading-relaxed">{workerData.currentAddress}</p>
-                </div>
-              )}
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddRecord(!showAddRecord)}
+                  className="bg-kerala-green-800 hover:bg-kerala-green-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-1.5"
+                >
+                  <PlusCircle className="w-3.5 h-3.5" />
+                  <span>{showAddRecord ? "Hide Record Form" : "+ Add Clinical Record"}</span>
+                </button>
+
+                <Link
+                  href={`/workers/${encodeURIComponent(workerData.portableHealthId || workerData.id)}`}
+                  className="bg-kerala-coir-100 hover:bg-kerala-coir-200 text-kerala-coir-900 text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-kerala-coir-300"
+                >
+                  <span>Full Profile Page</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </div>
+
+            {/* Quick Add Form Section if opened */}
+            {showAddRecord && (
+              <div className="my-6">
+                <AddClinicalRecordForm
+                  workerId={workerData.id}
+                  portableHealthId={workerData.portableHealthId}
+                  workerName={workerData.name}
+                  onRecordAdded={() => {
+                    handleSearch(workerData.portableHealthId);
+                  }}
+                  onClose={() => setShowAddRecord(false)}
+                />
+              </div>
+            )}
 
             {/* Quick Metrics */}
             <div className="grid grid-cols-3 gap-3 py-4 border-b border-kerala-coir-100 text-center">
@@ -223,7 +252,7 @@ export function WorkerSearchLookup() {
                 </p>
               </div>
               <div className="bg-kerala-gold-50/70 p-3 rounded-xl border border-kerala-gold-200">
-                <p className="text-lg font-extrabold text-kerala-gold-900">
+                <p className="text-lg font-extrabold text-kerala-gold-800">
                   {workerData.treatments?.length || 0}
                 </p>
                 <p className="text-[11px] font-semibold text-kerala-gold-800 uppercase tracking-wider">

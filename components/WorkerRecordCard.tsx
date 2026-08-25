@@ -1,5 +1,6 @@
 import React from "react";
-import { User, Phone, MapPin, Building, FileText, Activity, Stethoscope, Pill } from "lucide-react";
+import Link from "next/link";
+import { User, Phone, MapPin, Building, FileText, Activity, Stethoscope, Pill, ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 export interface WorkerWithDetails {
@@ -46,14 +47,14 @@ export interface WorkerWithDetails {
 
 export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs hover:border-emerald-300 transition-colors">
-      <div className="p-5">
+    <div className="bg-white rounded-houseboat border border-kerala-coir-200 overflow-hidden shadow-xs hover:border-kerala-green-400 transition-all">
+      <div className="p-5 sm:p-6">
         {/* Header with Portable Health ID and Name */}
-        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3.5">
+        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-kerala-coir-100 pb-3.5">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900">{worker.name}</h3>
-              <span className="text-xs bg-emerald-50 text-emerald-700 font-mono font-semibold px-2.5 py-0.5 rounded border border-emerald-200">
+              <span className="text-xs bg-kerala-green-50 text-kerala-green-900 font-mono font-bold px-2.5 py-0.5 rounded-full border border-kerala-green-200">
                 {worker.portableHealthId}
               </span>
             </div>
@@ -71,8 +72,8 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
           </div>
 
           {worker.currentAddress && (
-            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 text-xs text-slate-600 max-w-xs truncate">
-              <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <div className="flex items-center gap-1.5 bg-kerala-coir-50 px-2.5 py-1 rounded-xl border border-kerala-coir-200 text-xs text-slate-600 max-w-xs truncate">
+              <MapPin className="w-3.5 h-3.5 text-kerala-green-800 shrink-0" />
               <span className="truncate">{worker.currentAddress}</span>
             </div>
           )}
@@ -94,16 +95,16 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
 
         {/* Recent Screenings */}
         {worker.screenings && worker.screenings.length > 0 && (
-          <div className="mb-3 p-3 rounded-lg bg-teal-50/60 border border-teal-100 text-xs">
-            <div className="font-semibold text-teal-900 mb-1.5 flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-teal-700" />
+          <div className="mb-3 p-3 rounded-2xl bg-kerala-blue-50/50 border border-kerala-blue-200/60 text-xs">
+            <div className="font-semibold text-kerala-blue-950 mb-1.5 flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-kerala-blue-800" />
               Health Screenings:
             </div>
             <div className="space-y-1">
               {worker.screenings.map((sc) => (
-                <div key={sc.id} className="flex justify-between items-center text-teal-800">
+                <div key={sc.id} className="flex justify-between items-center text-kerala-blue-900">
                   <span>{sc.type}</span>
-                  <span className="font-semibold bg-teal-100/80 px-2 py-0.5 rounded text-[11px]">
+                  <span className="font-semibold bg-kerala-blue-100 px-2 py-0.5 rounded text-[11px]">
                     {sc.result}
                   </span>
                 </div>
@@ -112,22 +113,30 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
           </div>
         )}
 
-        {/* Summary Footer */}
-        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+        {/* Summary Footer & Link to Worker Detail Page */}
+        <div className="pt-3 border-t border-kerala-coir-100 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
-              <Stethoscope className="w-3.5 h-3.5 text-emerald-600" />
+              <Stethoscope className="w-3.5 h-3.5 text-kerala-green-800" />
               {worker.visits?.length || 0} Visits
             </span>
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
-              <Activity className="w-3.5 h-3.5 text-teal-600" />
+              <Activity className="w-3.5 h-3.5 text-kerala-blue-800" />
               {worker.screenings?.length || 0} Screenings
             </span>
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
-              <Pill className="w-3.5 h-3.5 text-blue-600" />
+              <Pill className="w-3.5 h-3.5 text-kerala-gold-700" />
               {worker.treatments?.length || 0} Treatments
             </span>
           </div>
+
+          <Link
+            href={`/workers/${encodeURIComponent(worker.portableHealthId || worker.id)}`}
+            className="font-bold text-kerala-green-900 hover:text-kerala-green-700 flex items-center gap-1 hover:underline"
+          >
+            <span>View Profile & Add Record</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
     </div>
