@@ -10,20 +10,13 @@ import {
   ArrowRight,
   ShieldCheck,
   Search,
-  PlusCircle,
-  FileSpreadsheet,
-  Globe,
-  Sparkles,
-  QrCode,
-  AlertTriangle,
   Zap,
   FolderOpen,
   Lock,
   HeartHandshake,
-  HeartPulse,
 } from "lucide-react";
 import { KeralaMotif, KeralaPalmIcon } from "@/components/KeralaMotif";
-import { WorkerRecordCard } from "@/components/WorkerRecordCard";
+import { HealthPassportCenterpiece } from "@/components/HealthPassportCenterpiece";
 
 export default async function HomePage({
   params,
@@ -36,12 +29,12 @@ export default async function HomePage({
   const t = await getTranslations({ locale, namespace: "home" });
   const tSec = await getTranslations({ locale, namespace: "sections" });
 
-  // Fetch real-time aggregate data for Kerala Health Dashboard
+  // Fetch real-time aggregate data & all workers for Kerala Health Passport
   let workerCount = 0;
   let facilityCount = 0;
   let visitCount = 0;
   let screeningCount = 0;
-  let recentWorkers: any[] = [];
+  let allWorkers: any[] = [];
   let facilities: any[] = [];
 
   try {
@@ -51,12 +44,11 @@ export default async function HomePage({
       prisma.visit.count(),
       prisma.screening.count(),
       prisma.worker.findMany({
-        take: 4,
         orderBy: { createdAt: "desc" },
         include: {
-          visits: { take: 1, orderBy: { date: "desc" } },
-          screenings: { take: 2, orderBy: { date: "desc" } },
-          treatments: { take: 1, orderBy: { date: "desc" } },
+          visits: { orderBy: { date: "desc" } },
+          screenings: { orderBy: { date: "desc" } },
+          treatments: { orderBy: { date: "desc" } },
         },
       }),
       prisma.facility.findMany({
@@ -73,14 +65,14 @@ export default async function HomePage({
     facilityCount = fCount;
     visitCount = vCount;
     screeningCount = sCount;
-    recentWorkers = workers;
+    allWorkers = workers;
     facilities = facs;
   } catch (err) {
     console.error("Database connection issue during home page render:", err);
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-6xl mx-auto">
       {/* Kerala Backwater Coastal Hero Banner */}
       <div className="relative overflow-hidden rounded-houseboat bg-gradient-to-br from-kerala-green-950 via-kerala-green-800 to-kerala-blue-900 text-white p-6 sm:p-10 shadow-lg border border-kerala-gold-600/30">
         <div className="absolute inset-0 pointer-events-none text-emerald-300 opacity-20">
@@ -121,110 +113,92 @@ export default async function HomePage({
         </div>
       </div>
 
-      {/* HEALTH PASSPORT CARD + RISK BADGE SCAFFOLD */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left: Health Passport Card */}
-        <div className="lg:col-span-2 bg-gradient-to-r from-slate-900 via-kerala-green-950 to-slate-900 border-2 border-kerala-gold-500/50 rounded-houseboat p-6 text-white shadow-md relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-kerala-gold-500/10 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-kerala-gold-500 text-slate-950 flex items-center justify-center font-bold shadow-md">
-                <QrCode className="w-7 h-7" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-white tracking-wide">
-                    {t("healthPassportTitle")}
-                  </h2>
-                  <span className="text-[10px] uppercase font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                    Active ID
-                  </span>
-                </div>
-                <p className="text-xs text-kerala-gold-300">
-                  {t("healthPassportSubtitle")} • Kerala State Health Department
-                </p>
-              </div>
-            </div>
-
-            {/* Risk Assessment Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs font-semibold self-start sm:self-auto">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>{t("riskBadgeLow")}</span>
-            </div>
+      {/* SIGNATURE HEALTH PASSPORT HOMEPAGE CENTERPIECE */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+              {t("healthPassportTitle")}
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-kerala-green-100 text-kerala-green-900 border border-kerala-green-300">
+              Interactive Centerpiece
+            </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 text-xs">
-            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-              <p className="text-slate-400 text-[10px] uppercase">Format</p>
-              <p className="font-mono font-bold text-white mt-0.5">KL-MH-XXXXXX</p>
-            </div>
-            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-              <p className="text-slate-400 text-[10px] uppercase">Coverage</p>
-              <p className="font-semibold text-white mt-0.5">All 14 Districts</p>
-            </div>
-            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-              <p className="text-slate-400 text-[10px] uppercase">Awaaz Linkage</p>
-              <p className="font-semibold text-emerald-300 mt-0.5">₹25,000 Enrolled</p>
-            </div>
-            <div className="bg-white/5 p-3 rounded-xl border border-white/10">
-              <p className="text-slate-400 text-[10px] uppercase">DPDP Status</p>
-              <p className="font-semibold text-white mt-0.5">Consent Protected</p>
-            </div>
-          </div>
+          <Link
+            href="/registry"
+            className="text-xs font-semibold text-kerala-green-800 hover:text-kerala-green-950 hover:underline flex items-center gap-1"
+          >
+            <span>{t("manageRegistryLink")}</span>
+            <ArrowRight className="w-3 h-3" />
+          </Link>
         </div>
 
-        {/* Right: Quick Sections Hub */}
-        <div className="bg-white border border-kerala-coir-200 rounded-houseboat p-5 shadow-xs flex flex-col justify-between">
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-              {t("quickNavTitle")}
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Link
-                href="/quick-actions"
-                className="p-2.5 rounded-xl bg-slate-50 hover:bg-kerala-green-50 border border-slate-200 hover:border-kerala-green-200 transition text-xs font-semibold text-slate-800 flex items-center gap-2"
-              >
-                <Zap className="w-4 h-4 text-kerala-green-800 shrink-0" />
-                <span className="truncate">{tSec("quickActionsTitle")}</span>
-              </Link>
+        {/* Health Passport Component */}
+        <HealthPassportCenterpiece workers={allWorkers} />
+      </section>
 
-              <Link
-                href="/records"
-                className="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-200 transition text-xs font-semibold text-slate-800 flex items-center gap-2"
-              >
-                <FolderOpen className="w-4 h-4 text-emerald-700 shrink-0" />
-                <span className="truncate">{tSec("recordsTitle")}</span>
-              </Link>
-
-              <Link
-                href="/privacy"
-                className="p-2.5 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 transition text-xs font-semibold text-slate-800 flex items-center gap-2"
-              >
-                <Lock className="w-4 h-4 text-blue-700 shrink-0" />
-                <span className="truncate">{tSec("privacyTitle")}</span>
-              </Link>
-
-              <Link
-                href="/schemes"
-                className="p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 transition text-xs font-semibold text-slate-800 flex items-center gap-2"
-              >
-                <HeartHandshake className="w-4 h-4 text-amber-700 shrink-0" />
-                <span className="truncate">{tSec("schemesTitle")}</span>
-              </Link>
-            </div>
+      {/* Quick Navigation Hub Tiles */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Link
+          href="/quick-actions"
+          className="bg-white border border-kerala-coir-200 rounded-2xl p-4 shadow-2xs hover:shadow-md hover:border-kerala-green-300 transition group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-kerala-green-50 text-kerala-green-800 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <Zap className="w-5 h-5" />
           </div>
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+            {tSec("quickActionsTitle")}
+          </h3>
+          <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+            {tSec("quickActionsSubtitle")}
+          </p>
+        </Link>
 
-          <div className="mt-4 pt-3 border-t border-kerala-coir-100 flex items-center justify-between text-xs">
-            <Link
-              href="/registry"
-              className="font-semibold text-kerala-green-800 hover:underline flex items-center gap-1"
-            >
-              <span>{t("openRegistryButton")}</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
+        <Link
+          href="/records"
+          className="bg-white border border-kerala-coir-200 rounded-2xl p-4 shadow-2xs hover:shadow-md hover:border-emerald-300 transition group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <FolderOpen className="w-5 h-5" />
           </div>
-        </div>
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+            {tSec("recordsTitle")}
+          </h3>
+          <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+            {tSec("recordsSubtitle")}
+          </p>
+        </Link>
+
+        <Link
+          href="/privacy"
+          className="bg-white border border-kerala-coir-200 rounded-2xl p-4 shadow-2xs hover:shadow-md hover:border-blue-300 transition group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-800 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <Lock className="w-5 h-5" />
+          </div>
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+            {tSec("privacyTitle")}
+          </h3>
+          <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+            {tSec("privacySubtitle")}
+          </p>
+        </Link>
+
+        <Link
+          href="/schemes"
+          className="bg-white border border-kerala-coir-200 rounded-2xl p-4 shadow-2xs hover:shadow-md hover:border-amber-300 transition group"
+        >
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+            <HeartHandshake className="w-5 h-5" />
+          </div>
+          <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+            {tSec("schemesTitle")}
+          </h3>
+          <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+            {tSec("schemesSubtitle")}
+          </p>
+        </Link>
       </div>
 
       {/* Aggregate Stats KPI Cards */}
@@ -288,72 +262,47 @@ export default async function HomePage({
         </div>
       </div>
 
-      {/* Main Grid: Enrolled Workers & Facilities */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Enrolled Workers */}
-        <div className="lg:col-span-2 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                {t("recentProfilesTitle")}
-              </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-kerala-green-100 text-kerala-green-900">
-                {t("activeRecordsBadge", { count: workerCount })}
-              </span>
-            </div>
-            <Link
-              href="/registry"
-              className="text-xs font-semibold text-kerala-green-800 hover:text-kerala-green-950 hover:underline"
-            >
-              {t("manageRegistryLink")}
-            </Link>
+      {/* Connected Kerala Facilities Section */}
+      <div className="bg-white border border-kerala-coir-200 rounded-houseboat p-6 shadow-xs">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-kerala-green-800" />
+            <h3 className="text-base font-bold text-slate-900">
+              {t("connectedFacilitiesTitle")}
+            </h3>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {recentWorkers.map((worker) => (
-              <WorkerRecordCard key={worker.id} worker={worker} />
-            ))}
-          </div>
+          <Link
+            href="/registry"
+            className="text-xs font-semibold text-kerala-green-800 hover:underline"
+          >
+            {t("openRegistryButton")}
+          </Link>
         </div>
 
-        {/* Right 1 Col: Connected Facilities */}
-        <div className="space-y-4">
-          <div className="bg-white border border-kerala-coir-200 rounded-houseboat p-5 shadow-xs">
-            <div className="flex items-center gap-2 mb-3">
-              <Building2 className="w-4 h-4 text-kerala-green-800" />
-              <h3 className="text-sm font-bold text-slate-900">
-                {t("connectedFacilitiesTitle")}
-              </h3>
-            </div>
-
-            <div className="space-y-3">
-              {facilities.map((facility) => (
-                <div
-                  key={facility.id}
-                  className="p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs hover:bg-kerala-coir-50 transition"
-                >
-                  <div className="flex items-start justify-between gap-1">
-                    <span className="font-semibold text-slate-800 leading-snug">
-                      {facility.name}
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-200 text-slate-700 shrink-0">
-                      {facility.type}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{facility.location}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {facilities.map((facility) => (
+            <div
+              key={facility.id}
+              className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs hover:bg-kerala-coir-50 transition flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-start justify-between gap-1 mb-1">
+                  <span className="font-bold text-slate-800 leading-snug">
+                    {facility.name}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-200 text-slate-700 shrink-0">
+                    {facility.type}
+                  </span>
                 </div>
-              ))}
-            </div>
+                <p className="text-[11px] text-slate-500">{facility.location}</p>
+              </div>
 
-            <div className="mt-4 pt-3 border-t border-kerala-coir-100 text-center">
-              <Link
-                href="/registry"
-                className="text-xs font-semibold text-kerala-green-800 hover:underline"
-              >
-                {t("openRegistryButton")}
-              </Link>
+              <div className="mt-3 pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-600 font-semibold">
+                <span>{facility._count?.visits || 0} Visits</span>
+                <span>{facility._count?.screenings || 0} Screenings</span>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </div>
