@@ -17,6 +17,7 @@ import {
   Building,
   ArrowRight,
   LogIn,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -196,6 +197,17 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
                 <span>Local Address: {createdWorker.currentAddress}</span>
               </p>
             )}
+
+            {/* Direct Link to Profile */}
+            <div className="mt-4 pt-3 border-t border-white/15 flex justify-end">
+              <Link
+                href={`/workers/${encodeURIComponent(createdWorker.portableHealthId)}`}
+                className="inline-flex items-center gap-1.5 text-xs font-bold bg-kerala-gold-500 hover:bg-kerala-gold-400 text-slate-950 px-3.5 py-1.5 rounded-lg shadow-xs transition"
+              >
+                <span>Open Full Profile & Log Clinical Visits</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
         </div>
       )}
