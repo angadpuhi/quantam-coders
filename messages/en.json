@@ -54,6 +54,24 @@
     "exportDataDesc": "Under the DPDP Act, you have the right to download a complete verified copy of your Athidhi Swasthya Passport anytime.",
     "downloadBtn": "Download My Health Record (PDF)"
   },
+  "schemesPage": {
+    "pageBadge": "Kerala & National Health Welfare Linkage",
+    "mainTitle": "Schemes & Welfare Benefits",
+    "mainSubtitle": "Universal social security, insurance coverage, and medical assistance matched specifically to your guest worker profile.",
+    "eligibleAlertsTitle": "You May Be Eligible For These Benefits",
+    "eligibleAlertsDesc": "Matched against your age, home state, occupational sector, and health triage risk status.",
+    "selectWorker": "Preview Eligibility for Worker:",
+    "matchedTag": "Matched for You",
+    "eligibilityReason": "Eligibility Reason:",
+    "coverageLabel": "Benefit Cover:",
+    "authorityLabel": "Issuing Authority:",
+    "keyBenefits": "Key Coverage & Entitlements:",
+    "howToClaim": "How to Claim & Enroll:",
+    "helpline": "Toll-Free Helpline:",
+    "viewOfficialPortal": "Official Portal",
+    "allSchemesTitle": "All Government Health & Social Schemes",
+    "allSchemesSubtitle": "Browse the complete repository of central and state health protection programs."
+  },
   "healthPassport": {
     "tagline": "Carry your health record across states and jobs",
     "passportTitle": "Athidhi Swasthya Passport",
