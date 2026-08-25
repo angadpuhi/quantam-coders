@@ -7,6 +7,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { SessionProvider } from "@/components/SessionProvider";
 import { Navbar } from "@/components/Navbar";
+import { SahaayakTerminal } from "@/components/SahaayakTerminal";
 import "../globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -62,6 +63,8 @@ export default async function LocaleLayout({
             <main className="flex-1 w-full">
               {children}
             </main>
+            {/* Global SAHAAYAK Command-Line Help Terminal */}
+            <SahaayakTerminal />
           </NextIntlClientProvider>
         </SessionProvider>
       </body>
