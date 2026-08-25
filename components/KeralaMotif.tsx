@@ -1,5 +1,28 @@
 import React from "react";
 
+export function KeralaPalmIcon({ className = "w-5 h-5 text-kerala-gold-400" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M12 22v-9" />
+      <path d="M12 13c-2.5-2.5-6-3-9-1.5 1.5 3 4 4.5 9 1.5z" />
+      <path d="M12 13c2.5-2.5 6-3 9-1.5-1.5 3-4 4.5-9 1.5z" />
+      <path d="M12 9c-2-3-5-4-8-3 1 3 3 4.5 8 3z" />
+      <path d="M12 9c2-3 5-4 8-3-1 3-3 4.5-8 3z" />
+      <path d="M12 5c-1-2.5-3.5-3.5-6-3 .5 2.5 2 3.5 6 3z" />
+      <path d="M12 5c1-2.5 3.5-3.5 6-3-.5 2.5-2 3.5-6 3z" />
+    </svg>
+  );
+}
+
 export function KeralaMotif({ className = "w-full h-auto opacity-20" }: { className?: string }) {
   return (
     <svg
