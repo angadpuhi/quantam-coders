@@ -73,11 +73,6 @@ export function SahaayakTerminal() {
   const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<TerminalMessage[]>([]);
 
-  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
-  if (isLoginPage) {
-    return null;
-  }
-
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<any | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -346,6 +341,11 @@ export function SahaayakTerminal() {
     "password",
     "contact",
   ];
+
+  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+  if (isLoginPage) {
+    return null;
+  }
 
   return (
     <>
