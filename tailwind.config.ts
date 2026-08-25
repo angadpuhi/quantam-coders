@@ -8,9 +8,33 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["var(--font-cormorant)", "Cormorant Garamond", "serif"],
+        sans: ["var(--font-inter)", "Inter", "sans-serif"],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        // ArogyaRekha Design System Palette
+        forest: {
+          ink: "#0f3e17",
+          shadow: "#0c2f10",
+        },
+        sage: {
+          mist: "#b1dbb8",
+        },
+        keylime: {
+          wash: "#e1f4df",
+        },
+        mint: {
+          veil: "#cfe7d3",
+        },
+        slatehush: "#b6ced5",
+        creampaper: "#fffefc",
+        charcoal: "#222222",
+        bordermist: "#efeeeb",
+
+        // Kerala Theme tokens
         kerala: {
           green: {
             50: "#f2f8f5",
@@ -21,9 +45,9 @@ const config: Config = {
             500: "#44876c",
             600: "#326c55",
             700: "#275544",
-            800: "#1b4332", // Deep Kerala Palm Green
-            900: "#133125",
-            950: "#091c14",
+            800: "#1b4332",
+            900: "#0f3e17",
+            950: "#0c2f10",
           },
           blue: {
             50: "#f0f8fb",
@@ -34,7 +58,7 @@ const config: Config = {
             500: "#3594bc",
             600: "#25789f",
             700: "#1e6081",
-            800: "#1c516c", // Backwater Lagoon Blue
+            800: "#1c516c",
             900: "#10384c",
             950: "#092230",
           },
@@ -47,7 +71,7 @@ const config: Config = {
             500: "#ba956a",
             600: "#a98055",
             700: "#8c6544",
-            800: "#73523b", // Coconut Husk Brown
+            800: "#73523b",
             900: "#5e4231",
             950: "#332219",
           },
@@ -59,13 +83,16 @@ const config: Config = {
             400: "#fbbf24",
             500: "#f59e0b",
             600: "#d97706",
-            700: "#b45309", // Nilavilakku Brass Gold
+            700: "#b45309",
             800: "#92400e",
             900: "#78350f",
           },
         },
       },
       borderRadius: {
+        nav: "7px",
+        card: "14px",
+        pill: "999px",
         houseboat: "1.75rem",
       },
     },

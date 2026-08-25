@@ -1,33 +1,44 @@
 "use client";
 
 import React, { useState } from "react";
-import { useTranslations } from "next-intl";
-import { Link, usePathname } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useSession, signOut } from "next-auth/react";
 import {
-  HeartPulse,
   Search,
   Activity,
   LogOut,
   LogIn,
   Shield,
-  Stethoscope,
   Menu,
   X,
   Zap,
   FolderOpen,
   Lock,
   HeartHandshake,
-  Home,
+  ArrowRight,
+  PhoneCall,
 } from "lucide-react";
-import { KeralaPalmIcon } from "@/components/KeralaMotif";
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export function Navbar() {
   const t = useTranslations("nav");
+  const currentLocale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const pathname = usePathname();
+
+  const languages = [
+    { code: "en", label: "English" },
+    { code: "ml", label: "മലയാളം" },
+    { code: "hi", label: "हिन्दी" },
+    { code: "bn", label: "বাংলা" },
+    { code: "or", label: "ଓଡ଼ିଆ" },
+  ];
+
+  const handleLanguageChange = (newLocale: string) => {
+    router.replace(pathname, { locale: newLocale });
+  };
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -36,145 +47,265 @@ export function Navbar() {
     return pathname.startsWith(path);
   };
 
-  const navLinks = [
-    { href: "/", label: t("home"), icon: Home, exact: true },
-    { href: "/quick-actions", label: t("quickActions"), icon: Zap },
-    { href: "/records", label: t("records"), icon: FolderOpen },
-    { href: "/privacy", label: t("privacy"), icon: Lock },
-    { href: "/schemes", label: t("schemes"), icon: HeartHandshake },
-    { href: "/registry", label: t("registerSearch"), icon: Search },
-    { href: "/admin", label: t("surveillance"), icon: Activity },
-  ];
-
   return (
-    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-kerala-coir-200 shadow-xs">
-      {/* Top Gold / Houseboat Wood Accent Strip */}
-      <div className="h-1 bg-gradient-to-r from-kerala-green-800 via-kerala-blue-800 to-kerala-gold-600" />
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Logo & Tag */}
-          <Link
-            href="/"
-            className="flex items-center gap-2.5 group focus:outline-hidden"
-          >
-            <div className="w-10 h-10 rounded-xl bg-kerala-green-900 text-white flex items-center justify-center shadow-xs group-hover:bg-kerala-green-950 transition-colors border border-kerala-gold-500/40 relative overflow-hidden">
-              <KeralaPalmIcon className="w-5 h-5 text-kerala-gold-400" />
-            </div>
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-base tracking-tight text-slate-900">
-                  {t("brand")}
-                  <span className="text-kerala-green-800">{t("brandAccent")}</span>
-                </span>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-sm bg-kerala-gold-100 text-kerala-gold-900 border border-kerala-gold-300 uppercase tracking-wider">
-                  {t("keralaBadge")}
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-500 font-medium leading-none hidden sm:block">
-                {t("subtitle")}
-              </span>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation Links */}
-          <nav className="hidden lg:flex items-center space-x-1">
-            {navLinks.map((item) => {
-              const active = isActive(item.href);
-              const Icon = item.icon;
+    <>
+      {/* Top Utility Bar matching ArogyaRekha design */}
+      <div className="bg-[#0f3e17] text-[#fffefc] text-xs border-b border-[#0c2f10]/40">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-2 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Choose language">
+            <span className="text-[11px] font-semibold text-[#b1dbb8] mr-1 hidden sm:inline">
+              Languages:
+            </span>
+            {languages.map((lang) => {
+              const isCurrent = currentLocale === lang.code;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href as any}
-                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition ${
-                    active
-                      ? "bg-kerala-green-900 text-white shadow-xs"
-                      : "text-slate-700 hover:text-kerala-green-900 hover:bg-kerala-coir-100/60"
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => handleLanguageChange(lang.code)}
+                  aria-current={isCurrent ? "true" : undefined}
+                  className={`px-2.5 py-0.5 rounded-pill text-[11px] transition font-medium tracking-wide ${
+                    isCurrent
+                      ? "bg-[#fffefc] text-[#0f3e17] font-semibold shadow-2xs"
+                      : "bg-white/10 text-white/90 hover:bg-white/20 hover:text-white"
                   }`}
                 >
-                  <Icon className={`w-3.5 h-3.5 ${active ? "text-kerala-gold-400" : "text-slate-500"}`} />
-                  <span>{item.label}</span>
-                </Link>
+                  {lang.label}
+                </button>
               );
             })}
-          </nav>
+          </div>
 
-          {/* Right Action Controls: Language Switcher & Auth */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Working Language Switcher Dropdown */}
-            <LanguageSwitcher />
-
-            {/* User Session or Staff Login */}
-            {status === "authenticated" && session ? (
-              <div className="flex items-center gap-2">
-                <div className="hidden md:flex flex-col text-right">
-                  <span className="text-xs font-bold text-slate-800 leading-tight">
-                    {session.user?.name || "Staff Member"}
-                  </span>
-                  <span className="text-[10px] font-semibold text-kerala-gold-800 flex items-center justify-end gap-1">
-                    <Shield className="w-2.5 h-2.5 text-kerala-gold-700" />
-                    {(session.user as any)?.role || "STAFF"}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  title={t("signOut")}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600 hover:text-red-700 bg-slate-100 hover:bg-red-50 p-2 rounded-xl border border-slate-200 transition"
-                >
-                  <LogOut className="w-4 h-4 text-slate-600 hover:text-red-600" />
-                  <span className="hidden sm:inline">{t("signOut")}</span>
-                </button>
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-1.5 bg-kerala-green-850 hover:bg-kerala-green-950 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-xs transition border border-kerala-green-900"
-              >
-                <LogIn className="w-3.5 h-3.5 text-kerala-gold-400" />
-                <span className="hidden sm:inline">{t("staffLogin")}</span>
-              </Link>
-            )}
-
-            {/* Mobile Hamburger Toggle */}
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
-              aria-label="Toggle Navigation Menu"
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
+          <div className="flex items-center gap-2 text-[11px] text-[#cfe7d3]">
+            <PhoneCall className="w-3 h-3 text-[#b1dbb8]" />
+            <span>Kerala DISHA Helpline: <strong>1056</strong> / 1800-425-1425</span>
           </div>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden border-t border-kerala-coir-200 bg-white/95 px-4 pt-3 pb-5 space-y-2 shadow-lg">
-          <div className="grid grid-cols-2 gap-1.5">
-            {navLinks.map((item) => {
-              const active = isActive(item.href);
-              const Icon = item.icon;
-              return (
+      {/* Main Sticky Navbar */}
+      <nav className="bg-[#fffefc]/95 backdrop-blur-md border-b border-[#efeeeb] sticky top-0 z-40">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8">
+          <div className="flex items-center justify-between h-[72px]">
+            {/* Logo matching ArogyaRekha visual identity */}
+            <Link
+              href="/"
+              className="flex items-center gap-2.5 group focus:outline-hidden"
+            >
+              <span
+                className="w-7 h-7 rounded-[7px] bg-[#0f3e17] flex items-center justify-center relative shadow-2xs group-hover:bg-[#0c2f10] transition-colors shrink-0"
+                aria-hidden="true"
+              >
+                <span className="w-2.5 h-2.5 rounded-[2px] bg-[#e1f4df]" />
+              </span>
+              <div className="flex flex-col">
+                <span className="font-display text-2xl font-normal tracking-tight text-[#0f3e17] leading-none">
+                  ArogyaRekha
+                </span>
+                <span className="text-[10px] text-[#222222]/70 font-medium tracking-wider uppercase mt-0.5">
+                  MigrantHealth Kerala
+                </span>
+              </div>
+            </Link>
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden lg:flex items-center space-x-7 text-[14px] text-[#222222]">
+              <Link
+                href="/#features"
+                className="hover:text-[#0f3e17] transition-colors py-1.5"
+              >
+                What&apos;s inside
+              </Link>
+              <Link
+                href="/#how-it-works"
+                className="hover:text-[#0f3e17] transition-colors py-1.5"
+              >
+                How it works
+              </Link>
+              <Link
+                href="/quick-actions"
+                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                  isActive("/quick-actions") ? "text-[#0f3e17] font-semibold" : ""
+                }`}
+              >
+                {t("quickActions")}
+              </Link>
+              <Link
+                href="/records"
+                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                  isActive("/records") ? "text-[#0f3e17] font-semibold" : ""
+                }`}
+              >
+                {t("records")}
+              </Link>
+              <Link
+                href="/schemes"
+                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                  isActive("/schemes") ? "text-[#0f3e17] font-semibold" : ""
+                }`}
+              >
+                {t("schemes")}
+              </Link>
+              <Link
+                href="/privacy"
+                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                  isActive("/privacy") ? "text-[#0f3e17] font-semibold" : ""
+                }`}
+              >
+                {t("privacy")}
+              </Link>
+              <Link
+                href="/registry"
+                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                  isActive("/registry") ? "text-[#0f3e17] font-semibold" : ""
+                }`}
+              >
+                {t("registerSearch")}
+              </Link>
+            </div>
+
+            {/* Right CTAs */}
+            <div className="flex items-center gap-3">
+              {/* Staff Login / Session */}
+              {status === "authenticated" && session ? (
+                <div className="flex items-center gap-2">
+                  <div className="hidden sm:flex flex-col text-right">
+                    <span className="text-xs font-semibold text-[#0f3e17] leading-tight">
+                      {session.user?.name || "Staff Member"}
+                    </span>
+                    <span className="text-[10px] text-slate-500 flex items-center justify-end gap-1">
+                      <Shield className="w-2.5 h-2.5 text-[#0f3e17]" />
+                      {(session.user as any)?.role || "STAFF"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    title={t("signOut")}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-red-700 bg-slate-100 hover:bg-red-50 p-2 rounded-card border border-[#efeeeb] transition"
+                  >
+                    <LogOut className="w-4 h-4 text-slate-600 hover:text-red-600" />
+                    <span className="hidden md:inline">{t("signOut")}</span>
+                  </button>
+                </div>
+              ) : (
                 <Link
-                  key={item.href}
-                  href={item.href as any}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-semibold transition ${
-                    active
-                      ? "bg-kerala-green-900 text-white shadow-xs"
-                      : "text-slate-700 hover:bg-kerala-coir-100/70"
-                  }`}
+                  href="/login"
+                  className="hidden sm:inline-flex items-center gap-1.5 border border-[#0f3e17] text-[#0f3e17] hover:bg-[#e1f4df]/60 font-medium px-3.5 py-2 rounded-card text-xs transition"
                 >
-                  <Icon className={`w-4 h-4 ${active ? "text-kerala-gold-400" : "text-slate-500"}`} />
-                  <span>{item.label}</span>
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>{t("staffLogin")}</span>
                 </Link>
-              );
-            })}
+              )}
+
+              {/* Main Primary CTA Button */}
+              <Link
+                href="/registry"
+                className="bg-[#0f3e17] hover:bg-[#0c2f10] text-[#fffefc] text-xs sm:text-[13px] font-medium px-4 py-2.5 rounded-card inline-flex items-center gap-2 shadow-xs transition"
+              >
+                <span>Get Health ID →</span>
+              </Link>
+
+              {/* Mobile Menu Hamburger */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden p-2 rounded-card text-[#222222] hover:bg-slate-100 transition"
+                aria-label="Toggle Menu"
+              >
+                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
-      )}
-    </header>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-[#efeeeb] bg-[#fffefc] px-4 pt-3 pb-6 space-y-3 shadow-lg">
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <Link
+                href="/#features"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium"
+              >
+                What&apos;s inside
+              </Link>
+              <Link
+                href="/#how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium"
+              >
+                How it works
+              </Link>
+              <Link
+                href="/quick-actions"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+              >
+                <Zap className="w-3.5 h-3.5" />
+                <span>{t("quickActions")}</span>
+              </Link>
+              <Link
+                href="/records"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+              >
+                <FolderOpen className="w-3.5 h-3.5" />
+                <span>{t("records")}</span>
+              </Link>
+              <Link
+                href="/schemes"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+              >
+                <HeartHandshake className="w-3.5 h-3.5" />
+                <span>{t("schemes")}</span>
+              </Link>
+              <Link
+                href="/privacy"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>{t("privacy")}</span>
+              </Link>
+              <Link
+                href="/registry"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+              >
+                <Search className="w-3.5 h-3.5" />
+                <span>{t("registerSearch")}</span>
+              </Link>
+              <Link
+                href="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+              >
+                <Activity className="w-3.5 h-3.5" />
+                <span>{t("surveillance")}</span>
+              </Link>
+            </div>
+
+            <div className="pt-2 border-t border-[#efeeeb] flex gap-2">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
+              >
+                {t("staffLogin")}
+              </Link>
+              <Link
+                href="/registry"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex-1 text-center py-2 rounded-card bg-[#0f3e17] text-[#fffefc] text-xs font-semibold"
+              >
+                Get Health ID →
+              </Link>
+            </div>
+          </div>
+        )}
+      </nav>
+    </>
   );
 }
