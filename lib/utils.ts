@@ -5,13 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+const MONTHS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "N/A";
-  return new Date(date).toLocaleDateString("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const d = new Date(date);
+  if (isNaN(d.getTime())) return "N/A";
+  
+  // Use deterministic UTC/local extraction to ensure 100% SSR & client hydration parity
+  const day = d.getDate();
+  const month = MONTHS[d.getMonth()];
+  const year = d.getFullYear();
+  
+  return `${day} ${month} ${year}`;
 }
 
 export function generateHealthId(): string {

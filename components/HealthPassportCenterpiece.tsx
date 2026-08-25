@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { KeralaMotif, KeralaPalmIcon } from "@/components/KeralaMotif";
 import { RiskStatusBadge } from "@/components/RiskStatusBadge";
+import { formatDate } from "@/lib/utils";
 
 interface HealthPassportProps {
   workers: any[];
@@ -257,7 +258,7 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
                   <div>
                     <span className="text-slate-400">{t("dob")} </span>
                     <span className="font-semibold text-white">
-                      {new Date(selectedWorker.dob).toLocaleDateString()}
+                      {formatDate(selectedWorker.dob)}
                     </span>
                   </div>
                 )}
@@ -474,7 +475,7 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
                         <div className="flex items-center sm:justify-end gap-1">
                           <Clock className="w-3 h-3 text-kerala-gold-400" />
                           <span>
-                            {new Date(treatment.date).toLocaleDateString()}
+                            {formatDate(treatment.date)}
                           </span>
                         </div>
                       </div>
@@ -516,7 +517,7 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
                         <div className="flex items-center sm:justify-end gap-1">
                           <Calendar className="w-3 h-3 text-blue-400" />
                           <span>
-                            {new Date(vac.date).toLocaleDateString()}
+                            {formatDate(vac.date)}
                           </span>
                         </div>
                       </div>
@@ -558,7 +559,7 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
                         <div className="flex items-center sm:justify-end gap-1">
                           <Clock className="w-3 h-3 text-amber-400" />
                           <span>
-                            {new Date(lab.date).toLocaleDateString()}
+                            {formatDate(lab.date)}
                           </span>
                         </div>
                       </div>
@@ -600,7 +601,7 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
                         <div className="flex items-center sm:justify-end gap-1">
                           <Calendar className="w-3 h-3 text-emerald-400" />
                           <span>
-                            {new Date(visit.date).toLocaleDateString()}
+                            {formatDate(visit.date)}
                           </span>
                         </div>
                       </div>
