@@ -1,37 +1,46 @@
 import React from "react";
-import { User, Phone, MapPin, Building, FileText, Syringe, HeartPulse, AlertCircle } from "lucide-react";
+import { User, Phone, MapPin, Building, FileText, Activity, Stethoscope, Pill } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 export interface WorkerWithDetails {
   id: string;
-  healthId: string;
-  awaazId?: string | null;
-  fullName: string;
+  name: string;
+  dob?: Date | string | null;
   gender: string;
-  bloodGroup?: string | null;
   phone?: string | null;
-  stateOfOrigin: string;
-  nativeLanguage: string;
-  keralaDistrict: string;
-  currentEmployer?: string | null;
-  occupation?: string | null;
-  emergencyContactName?: string | null;
-  emergencyContactPhone?: string | null;
-  allergies?: string | null;
-  chronicConditions?: string | null;
-  healthRecords?: Array<{
+  homeState: string;
+  currentAddress?: string | null;
+  portableHealthId: string;
+  visits?: Array<{
     id: string;
-    facilityName: string;
-    doctorName: string;
-    visitDate: Date | string;
-    visitType: string;
-    diagnosis: string;
+    date: Date | string;
+    notes?: string | null;
+    facility?: {
+      name: string;
+      location: string;
+      type: string;
+    } | null;
+    treatments?: Array<{
+      id: string;
+      description: string;
+      medication?: string | null;
+    }>;
   }>;
-  vaccinations?: Array<{
+  screenings?: Array<{
     id: string;
-    vaccineName: string;
-    doseNumber: number;
-    administeredDate: Date | string;
+    type: string;
+    result: string;
+    date: Date | string;
+    facility?: {
+      name: string;
+      location: string;
+    } | null;
+  }>;
+  treatments?: Array<{
+    id: string;
+    description: string;
+    medication?: string | null;
+    date: Date | string;
   }>;
 }
 
@@ -39,83 +48,86 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs hover:border-emerald-300 transition-colors">
       <div className="p-5">
-        {/* Header with Health ID and Name */}
+        {/* Header with Portable Health ID and Name */}
         <div className="flex flex-wrap items-start justify-between gap-2 border-b border-slate-100 pb-3.5">
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900">{worker.fullName}</h3>
-              <span className="text-xs bg-emerald-50 text-emerald-700 font-mono font-medium px-2 py-0.5 rounded border border-emerald-200">
-                {worker.healthId}
+              <h3 className="text-base font-bold text-slate-900">{worker.name}</h3>
+              <span className="text-xs bg-emerald-50 text-emerald-700 font-mono font-semibold px-2.5 py-0.5 rounded border border-emerald-200">
+                {worker.portableHealthId}
               </span>
             </div>
             <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
               <span>{worker.gender}</span>
-              <span>•</span>
-              <span>Blood Group: <strong className="text-slate-700">{worker.bloodGroup || "Unknown"}</strong></span>
-              {worker.awaazId && (
+              {worker.dob && (
                 <>
                   <span>•</span>
-                  <span>Awaaz ID: <span className="font-mono text-slate-700">{worker.awaazId}</span></span>
+                  <span>DOB: {formatDate(worker.dob)}</span>
                 </>
               )}
+              <span>•</span>
+              <span>Origin: <strong className="text-slate-700">{worker.homeState}</strong></span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 text-xs text-slate-600">
-            <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-            <span>{worker.keralaDistrict}, Kerala</span>
-          </div>
+          {worker.currentAddress && (
+            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 text-xs text-slate-600 max-w-xs truncate">
+              <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+              <span className="truncate">{worker.currentAddress}</span>
+            </div>
+          )}
         </div>
 
-        {/* Demographics & Origin */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 py-3 text-xs">
-          <div className="flex items-center gap-2 text-slate-600">
-            <span className="text-slate-400">Origin:</span>
-            <span className="font-medium text-slate-800">{worker.stateOfOrigin} ({worker.nativeLanguage})</span>
-          </div>
+        {/* Contact Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-3 text-xs">
           {worker.phone && (
             <div className="flex items-center gap-2 text-slate-600">
               <Phone className="w-3.5 h-3.5 text-slate-400" />
               <span className="font-medium text-slate-800">{worker.phone}</span>
             </div>
           )}
-          {worker.occupation && (
-            <div className="flex items-center gap-2 text-slate-600">
-              <Building className="w-3.5 h-3.5 text-slate-400" />
-              <span className="font-medium text-slate-800">{worker.occupation} {worker.currentEmployer ? `(${worker.currentEmployer})` : ""}</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-slate-600">
+            <span className="text-slate-400">Home State:</span>
+            <span className="font-medium text-slate-800">{worker.homeState}</span>
+          </div>
         </div>
 
-        {/* Medical Flags */}
-        {(worker.allergies || worker.chronicConditions) && (
-          <div className="mb-3 p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              {worker.allergies && <div><strong>Allergies:</strong> {worker.allergies}</div>}
-              {worker.chronicConditions && <div><strong>Chronic Conditions:</strong> {worker.chronicConditions}</div>}
+        {/* Recent Screenings */}
+        {worker.screenings && worker.screenings.length > 0 && (
+          <div className="mb-3 p-3 rounded-lg bg-teal-50/60 border border-teal-100 text-xs">
+            <div className="font-semibold text-teal-900 mb-1.5 flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-teal-700" />
+              Health Screenings:
+            </div>
+            <div className="space-y-1">
+              {worker.screenings.map((sc) => (
+                <div key={sc.id} className="flex justify-between items-center text-teal-800">
+                  <span>{sc.type}</span>
+                  <span className="font-semibold bg-teal-100/80 px-2 py-0.5 rounded text-[11px]">
+                    {sc.result}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Health Records & Vaccinations count */}
+        {/* Summary Footer */}
         <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
-              <FileText className="w-3.5 h-3.5 text-emerald-600" />
-              {worker.healthRecords?.length || 0} Clinical Visits
+              <Stethoscope className="w-3.5 h-3.5 text-emerald-600" />
+              {worker.visits?.length || 0} Visits
             </span>
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
-              <Syringe className="w-3.5 h-3.5 text-teal-600" />
-              {worker.vaccinations?.length || 0} Vaccinations
+              <Activity className="w-3.5 h-3.5 text-teal-600" />
+              {worker.screenings?.length || 0} Screenings
+            </span>
+            <span className="flex items-center gap-1.5 font-medium text-slate-700">
+              <Pill className="w-3.5 h-3.5 text-blue-600" />
+              {worker.treatments?.length || 0} Treatments
             </span>
           </div>
-
-          {worker.emergencyContactPhone && (
-            <span className="text-slate-500">
-              Emergency: <strong className="text-slate-700">{worker.emergencyContactName || "Contact"}</strong> ({worker.emergencyContactPhone})
-            </span>
-          )}
         </div>
       </div>
     </div>

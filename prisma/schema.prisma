@@ -11,56 +11,69 @@ datasource db {
 }
 
 model Worker {
-  id                    String         @id @default(cuid())
-  healthId              String         @unique
-  awaazId               String?        @unique // Kerala Awaaz Health Insurance ID
-  fullName              String
-  dateOfBirth           DateTime?
-  gender                String
-  bloodGroup            String?
-  phone                 String?
-  stateOfOrigin         String         // e.g. West Bengal, Assam, Bihar, Odisha
-  nativeLanguage        String         // e.g. Bengali, Hindi, Assamese, Odia
-  keralaDistrict        String         // e.g. Ernakulam, Kozhikode, Thiruvananthapuram
-  localAddress          String?
-  currentEmployer       String?
-  occupation            String?        // e.g. Construction, Plywood Mill, Agriculture, Hospitality
-  emergencyContactName  String?
-  emergencyContactPhone String?
-  allergies             String?
-  chronicConditions     String?
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  id               String      @id @default(cuid())
+  name             String
+  dob              DateTime?
+  gender           String
+  phone            String?
+  homeState        String
+  currentAddress   String?
+  portableHealthId String      @unique
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
-  healthRecords         HealthRecord[]
-  vaccinations          Vaccination[]
+  visits           Visit[]
+  screenings       Screening[]
+  treatments       Treatment[]
 }
 
-model HealthRecord {
-  id           String   @id @default(cuid())
-  workerId     String
-  worker       Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  facilityName String   // e.g., Perumbavoor CHC, Ernakulam General Hospital
-  doctorName   String
-  visitDate    DateTime @default(now())
-  visitType    String   // General Checkup, Emergency, Occupational Screening, Follow-up
-  symptoms     String
-  diagnosis    String
-  prescription String?
-  vitalSigns   String?  // e.g. "BP: 120/80, Pulse: 72, SpO2: 98%, Temp: 98.6F"
-  notes        String?
-  createdAt    DateTime @default(now())
+model Facility {
+  id         String      @id @default(cuid())
+  name       String
+  location   String
+  type       String      // e.g., PHC, CHC, General Hospital, Mobile Camp
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  visits     Visit[]
+  screenings Screening[]
 }
 
-model Vaccination {
-  id               String    @id @default(cuid())
-  workerId         String
-  worker           Worker    @relation(fields: [workerId], references: [id], onDelete: Cascade)
-  vaccineName      String    // e.g., Tetanus Toxoid, Hepatitis B, COVID-19, Typhoid
-  doseNumber       Int       @default(1)
-  administeredDate DateTime  @default(now())
-  nextDueDate      DateTime?
-  administeredAt   String    // Healthcare centre or Mobile Camp name
-  batchNumber      String?
-  createdAt        DateTime  @default(now())
+model Visit {
+  id         String      @id @default(cuid())
+  workerId   String
+  facilityId String
+  date       DateTime    @default(now())
+  notes      String?
+  createdAt  DateTime    @default(now())
+
+  worker     Worker      @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  facility   Facility    @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  treatments Treatment[]
+}
+
+model Screening {
+  id         String   @id @default(cuid())
+  workerId   String
+  facilityId String
+  type       String   // e.g., Tuberculosis, Hypertension, Diabetes, Malaria, Occupational Health
+  result     String   // e.g., Normal, Positive, Negative, Elevated, Under Review
+  date       DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  worker     Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+}
+
+model Treatment {
+  id          String   @id @default(cuid())
+  workerId    String
+  visitId     String?
+  description String
+  medication  String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  worker      Worker   @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  visit       Visit?   @relation(fields: [visitId], references: [id], onDelete: Cascade)
 }

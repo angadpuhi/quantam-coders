@@ -3,13 +3,25 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const workerCount = await prisma.worker.count();
+    const [workerCount, facilityCount, visitCount, screeningCount, treatmentCount] =
+      await Promise.all([
+        prisma.worker.count(),
+        prisma.facility.count(),
+        prisma.visit.count(),
+        prisma.screening.count(),
+        prisma.treatment.count(),
+      ]);
+
     return NextResponse.json({
       status: "ok",
       service: "MigrantHealth Kerala Portal",
       database: "connected (SQLite)",
       stats: {
-        workerCount,
+        workers: workerCount,
+        facilities: facilityCount,
+        visits: visitCount,
+        screenings: screeningCount,
+        treatments: treatmentCount,
       },
       timestamp: new Date().toISOString(),
     });
@@ -18,7 +30,7 @@ export async function GET() {
       {
         status: "degraded",
         service: "MigrantHealth Kerala Portal",
-        database: "uninitialized or error",
+        database: "error",
         error: error instanceof Error ? error.message : "Unknown error",
         timestamp: new Date().toISOString(),
       },

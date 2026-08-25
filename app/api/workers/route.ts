@@ -11,20 +11,25 @@ export async function GET(request: Request) {
       where: query
         ? {
             OR: [
-              { fullName: { contains: query } },
-              { healthId: { contains: query } },
+              { name: { contains: query } },
+              { portableHealthId: { contains: query } },
               { phone: { contains: query } },
-              { awaazId: { contains: query } },
-              { keralaDistrict: { contains: query } },
+              { homeState: { contains: query } },
+              { currentAddress: { contains: query } },
             ],
           }
         : undefined,
       include: {
-        healthRecords: {
-          orderBy: { visitDate: "desc" },
+        visits: {
+          include: { facility: true, treatments: true },
+          orderBy: { date: "desc" },
         },
-        vaccinations: {
-          orderBy: { administeredDate: "desc" },
+        screenings: {
+          include: { facility: true },
+          orderBy: { date: "desc" },
+        },
+        treatments: {
+          orderBy: { date: "desc" },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -42,54 +47,29 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const {
-      fullName,
-      gender,
-      bloodGroup,
-      phone,
-      stateOfOrigin,
-      nativeLanguage,
-      keralaDistrict,
-      localAddress,
-      currentEmployer,
-      occupation,
-      awaazId,
-      emergencyContactName,
-      emergencyContactPhone,
-      allergies,
-      chronicConditions,
-    } = body;
+    const { name, dob, gender, phone, homeState, currentAddress, portableHealthId } = body;
 
-    if (!fullName || !stateOfOrigin || !nativeLanguage || !keralaDistrict) {
+    if (!name || !gender || !homeState) {
       return NextResponse.json(
         {
           success: false,
-          error: "Missing required fields (fullName, stateOfOrigin, nativeLanguage, keralaDistrict)",
+          error: "Missing required fields (name, gender, homeState)",
         },
         { status: 400 }
       );
     }
 
-    const healthId = body.healthId || generateHealthId();
+    const healthId = portableHealthId || generateHealthId();
 
     const newWorker = await prisma.worker.create({
       data: {
-        healthId,
-        awaazId,
-        fullName,
-        gender: gender || "Not Specified",
-        bloodGroup,
+        name,
+        dob: dob ? new Date(dob) : null,
+        gender,
         phone,
-        stateOfOrigin,
-        nativeLanguage,
-        keralaDistrict,
-        localAddress,
-        currentEmployer,
-        occupation,
-        emergencyContactName,
-        emergencyContactPhone,
-        allergies,
-        chronicConditions,
+        homeState,
+        currentAddress,
+        portableHealthId: healthId,
       },
     });
 

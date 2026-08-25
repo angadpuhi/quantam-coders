@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, FileText, Syringe, ShieldCheck, Search, PlusCircle, HeartPulse, Building2, MapPin } from "lucide-react";
+import { Users, Building2, Stethoscope, Activity, Pill, HeartPulse, Search, MapPin } from "lucide-react";
 import { StatCard } from "@/components/StatCard";
 import { WorkerRecordCard } from "@/components/WorkerRecordCard";
 import { prisma } from "@/lib/prisma";
@@ -9,114 +9,77 @@ export const dynamic = "force-dynamic";
 async function getDashboardData() {
   try {
     const totalWorkers = await prisma.worker.count();
-    const totalRecords = await prisma.healthRecord.count();
-    const totalVaccinations = await prisma.vaccination.count();
+    const totalFacilities = await prisma.facility.count();
+    const totalVisits = await prisma.visit.count();
+    const totalScreenings = await prisma.screening.count();
+    const totalTreatments = await prisma.treatment.count();
+
     const recentWorkers = await prisma.worker.findMany({
       take: 6,
       orderBy: { createdAt: "desc" },
       include: {
-        healthRecords: {
-          take: 2,
-          orderBy: { visitDate: "desc" },
+        visits: {
+          include: {
+            facility: true,
+            treatments: true,
+          },
+          orderBy: { date: "desc" },
         },
-        vaccinations: {
-          take: 2,
-          orderBy: { administeredDate: "desc" },
+        screenings: {
+          include: {
+            facility: true,
+          },
+          orderBy: { date: "desc" },
+        },
+        treatments: {
+          orderBy: { date: "desc" },
+        },
+      },
+    });
+
+    const facilities = await prisma.facility.findMany({
+      include: {
+        _count: {
+          select: { visits: true, screenings: true },
         },
       },
     });
 
     return {
       totalWorkers,
-      totalRecords,
-      totalVaccinations,
+      totalFacilities,
+      totalVisits,
+      totalScreenings,
+      totalTreatments,
       recentWorkers,
+      facilities,
       dbConnected: true,
     };
   } catch (error) {
-    console.error("Database query failed (database might need migration):", error);
+    console.error("Database query failed:", error);
     return {
       totalWorkers: 0,
-      totalRecords: 0,
-      totalVaccinations: 0,
+      totalFacilities: 0,
+      totalVisits: 0,
+      totalScreenings: 0,
+      totalTreatments: 0,
       recentWorkers: [],
+      facilities: [],
       dbConnected: false,
     };
   }
 }
 
 export default async function HomePage() {
-  const { totalWorkers, totalRecords, totalVaccinations, recentWorkers, dbConnected } =
-    await getDashboardData();
-
-  // Demo fallback items if fresh DB without seed data yet
-  const sampleWorkers = [
-    {
-      id: "demo-1",
-      healthId: "KL-MH-829104",
-      awaazId: "AWZ-2024-99120",
-      fullName: "Debabrata Das",
-      gender: "Male",
-      bloodGroup: "B+",
-      phone: "+91 98312 44910",
-      stateOfOrigin: "West Bengal",
-      nativeLanguage: "Bengali",
-      keralaDistrict: "Ernakulam",
-      currentEmployer: "Sunrise Wood Mills",
-      occupation: "Machine Operator",
-      emergencyContactName: "Tapan Das (Brother)",
-      emergencyContactPhone: "+91 98312 44999",
-      allergies: "Penicillin",
-      chronicConditions: "Mild Hypertension",
-      healthRecords: [
-        {
-          id: "rec-1",
-          facilityName: "Perumbavoor Community Health Centre",
-          doctorName: "Dr. Ananya Nair",
-          visitDate: new Date(),
-          visitType: "Occupational Health Screening",
-          diagnosis: "Dust exposure respiratory checkup - normal spirometry",
-        },
-      ],
-      vaccinations: [
-        {
-          id: "vac-1",
-          vaccineName: "Tetanus Toxoid",
-          doseNumber: 2,
-          administeredDate: new Date(),
-        },
-      ],
-    },
-    {
-      id: "demo-2",
-      healthId: "KL-MH-654219",
-      awaazId: "AWZ-2025-11029",
-      fullName: "Raju Boro",
-      gender: "Male",
-      bloodGroup: "O+",
-      phone: "+91 88765 12093",
-      stateOfOrigin: "Assam",
-      nativeLanguage: "Assamese",
-      keralaDistrict: "Kozhikode",
-      currentEmployer: "Malabar Infrastructure Ltd",
-      occupation: "Construction Mason",
-      emergencyContactName: "Bina Boro (Spouse)",
-      emergencyContactPhone: "+91 88765 99981",
-      allergies: "None reported",
-      chronicConditions: "None",
-      healthRecords: [],
-      vaccinations: [
-        {
-          id: "vac-2",
-          vaccineName: "Hepatitis B",
-          doseNumber: 1,
-          administeredDate: new Date(),
-        },
-      ],
-    },
-  ];
-
-  const displayWorkers = recentWorkers.length > 0 ? recentWorkers : sampleWorkers;
+  const {
+    totalWorkers,
+    totalFacilities,
+    totalVisits,
+    totalScreenings,
+    totalTreatments,
+    recentWorkers,
+    facilities,
+  } = await getDashboardData();
 
   return (
     <div className="space-y-8">
@@ -128,10 +91,10 @@ export default async function HomePage() {
             Kerala Public Health Initiative
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-            Digital Health Records for Guest Workers in Kerala
+            Digital Health Records for Guest Workers
           </h1>
           <p className="mt-3 text-emerald-100 text-sm sm:text-base leading-relaxed">
-            Portable, multilingual health records safeguarding guest workers across Kerala's Primary Health Centres (PHCs), Community Health Centres (CHCs), and occupational mobile medical units.
+            Portable health record management connecting guest workers (*Athidhi Thozhilalikal*) with Primary Health Centres (PHCs), Community Health Centres (CHCs), and mobile medical screening camps across Kerala.
           </p>
         </div>
       </div>
@@ -140,41 +103,41 @@ export default async function HomePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Registered Workers"
-          value={totalWorkers > 0 ? totalWorkers : "14,820+"}
-          description="Enrolled in Health Portal"
+          value={totalWorkers}
+          description="Portable Health IDs Issued"
           icon={Users}
           colorClass="bg-emerald-600 text-white"
         />
         <StatCard
-          title="Clinical Consultations"
-          value={totalRecords > 0 ? totalRecords : "38,450+"}
-          description="PHC & CHC Visits"
-          icon={FileText}
+          title="Health Facilities"
+          value={totalFacilities}
+          description="PHCs, CHCs & Mobile Units"
+          icon={Building2}
           colorClass="bg-teal-600 text-white"
         />
         <StatCard
-          title="Vaccinations Logged"
-          value={totalVaccinations > 0 ? totalVaccinations : "19,210+"}
-          description="Doses Administered"
-          icon={Syringe}
+          title="Clinical Visits"
+          value={totalVisits}
+          description="Medical Consultations"
+          icon={Stethoscope}
           colorClass="bg-blue-600 text-white"
         />
         <StatCard
-          title="Awaaz Scheme Linkage"
-          value="92.4%"
-          description="Health Coverage Rate"
-          icon={ShieldCheck}
+          title="Screenings & Tests"
+          value={totalScreenings}
+          description={`${totalTreatments} Treatments Prescribed`}
+          icon={Activity}
           colorClass="bg-amber-600 text-white"
         />
       </div>
 
-      {/* Quick Search & Filter Section */}
+      {/* Quick Search & Registry Lookup */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Worker Health Registry Search</h2>
+            <h2 className="text-lg font-bold text-slate-900">Worker Registry & Portable Health ID Lookup</h2>
             <p className="text-xs text-slate-500">
-              Lookup records by Universal Health ID (KL-MH-XXXXXX), Awaaz ID, or Mobile number
+              Instant retrieval across facilities by Portable Health ID (e.g. KL-MH-829104), Name, or Mobile
             </p>
           </div>
 
@@ -183,7 +146,7 @@ export default async function HomePage() {
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search Health ID / Name / Mobile..."
+                placeholder="Search Portable Health ID / Name..."
                 className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
               />
             </div>
@@ -194,54 +157,47 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Worker Health Profiles Grid */}
+      {/* Worker Profiles Grid */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <span>Recent Health Profiles</span>
+            <span>Enrolled Workers & Portable Records</span>
             <span className="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-              {recentWorkers.length > 0 ? "Live Database" : "Sample Records"}
+              {recentWorkers.length} Active Records
             </span>
           </h2>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {displayWorkers.map((worker) => (
+          {recentWorkers.map((worker) => (
             <WorkerRecordCard key={worker.id} worker={worker} />
           ))}
         </div>
       </div>
 
-      {/* Kerala Health Camp Schedule & Quick Links */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5">
-          <div className="flex items-center gap-2 text-emerald-900 font-bold text-sm mb-2">
-            <Building2 className="w-4 h-4 text-emerald-700" />
-            Key District Hubs
-          </div>
-          <p className="text-xs text-emerald-800 leading-relaxed">
-            Major screening nodes active in <strong>Perumbavoor (Ernakulam)</strong>, <strong>Kozhikode</strong>, <strong>Kanjikode (Palakkad)</strong>, and <strong>Trivandrum</strong>.
-          </p>
-        </div>
-
-        <div className="bg-teal-50 border border-teal-100 rounded-xl p-5">
-          <div className="flex items-center gap-2 text-teal-900 font-bold text-sm mb-2">
-            <HeartPulse className="w-4 h-4 text-teal-700" />
-            Mobile Medical Units
-          </div>
-          <p className="text-xs text-teal-800 leading-relaxed">
-            Weekly on-site health checkups at construction camps, plywood manufacturing units, and seasonal plantations.
-          </p>
-        </div>
-
-        <div className="bg-blue-50 border border-blue-100 rounded-xl p-5">
-          <div className="flex items-center gap-2 text-blue-900 font-bold text-sm mb-2">
-            <ShieldCheck className="w-4 h-4 text-blue-700" />
-            Awaaz Scheme & Free Care
-          </div>
-          <p className="text-xs text-blue-800 leading-relaxed">
-            Seamless integration with Kerala State's Awaaz health insurance, ensuring cashless emergency care across empanelled hospitals.
-          </p>
+      {/* Network of Facilities */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <Building2 className="w-5 h-5 text-emerald-600" />
+          <span>Connected Health Facilities</span>
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {facilities.map((fac) => (
+            <div key={fac.id} className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+              <span className="inline-block text-[11px] font-bold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded mb-2">
+                {fac.type}
+              </span>
+              <h3 className="text-sm font-bold text-slate-900">{fac.name}</h3>
+              <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                {fac.location}
+              </p>
+              <div className="mt-3 pt-3 border-t border-slate-100 flex justify-between text-xs text-slate-600">
+                <span>{fac._count.visits} Visits</span>
+                <span>{fac._count.screenings} Screenings</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
