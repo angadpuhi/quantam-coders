@@ -7,6 +7,7 @@ import { getMessages, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { SessionProvider } from "@/components/SessionProvider";
 import { Navbar } from "@/components/Navbar";
+import { BottomNav } from "@/components/BottomNav";
 import { SahaayakTerminal } from "@/components/SahaayakTerminal";
 import "../globals.css";
 
@@ -60,9 +61,11 @@ export default async function LocaleLayout({
         <SessionProvider>
           <NextIntlClientProvider messages={messages}>
             <Navbar />
-            <main className="flex-1 w-full">
+            <main className="flex-1 w-full pb-20 md:pb-0">
               {children}
             </main>
+            {/* Mobile Bottom Navigation Bar */}
+            <BottomNav />
             {/* Global SAHAAYAK Command-Line Help Terminal */}
             <SahaayakTerminal />
           </NextIntlClientProvider>
