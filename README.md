@@ -12,7 +12,7 @@ Kerala hosts over 3 million inter-state migrant workers employed in construction
 - **Occupational Health Hazards**: Exposure to chemical fumes, industrial dust, and physical risks requires continuous occupational monitoring.
 - **Scheme Utilization**: Need for streamlined linkage with Kerala Government's **Awaaz Health Insurance Scheme** and local Primary Healthcare Centres (PHCs) / Community Healthcare Centres (CHCs).
 
-**MigrantHealth** provides a unified, portable, and multilingual health registry that enables seamless health record tracking, vaccination history management, occupational screening logs, and rapid emergency contact access across all 14 districts of Kerala.
+**MigrantHealth** provides a unified, portable, and multilingual health registry that enables seamless health record tracking, screening logs, and clinical treatments across all 14 districts of Kerala.
 
 ---
 
@@ -32,20 +32,27 @@ Kerala hosts over 3 million inter-state migrant workers employed in construction
 migrant-health/
 ├── app/                      # Next.js App Router (Layouts, Pages, API endpoints)
 │   ├── api/
+│   │   ├── facilities/route.ts# Facilities list & registration
 │   │   ├── health/route.ts   # System & DB connectivity status
-│   │   └── workers/route.ts  # Worker registry REST API (GET, POST)
+│   │   ├── screenings/route.ts# Diagnostic & screening logs (POST / GET)
+│   │   ├── treatments/route.ts# Treatment plans & prescriptions (POST / GET)
+│   │   ├── visits/route.ts   # Clinical visits (POST / GET)
+│   │   ├── workers/route.ts  # Worker registry & portable ID search (POST / GET)
+│   │   └── workers/[id]/route.ts # Full worker health history by ID or portableHealthId
 │   ├── globals.css           # Tailwind CSS styles & CSS custom properties
 │   ├── layout.tsx            # Root layout with navigation & meta tags
 │   └── page.tsx              # Public health dashboard & registry overview
 ├── components/               # Reusable React UI Components
 │   ├── Navbar.tsx            # Header with language indicator & portal branding
 │   ├── StatCard.tsx          # Metric cards for key health indicators
-│   └── WorkerRecordCard.tsx  # Detailed worker profile & clinical history card
+│   └── WorkerRecordCard.tsx  # Detailed worker profile, visits & screenings card
 ├── lib/                      # Shared libraries and utilities
 │   ├── prisma.ts             # Prisma Client singleton
 │   └── utils.ts              # Helper functions (date formatting, ID generation)
 ├── prisma/                   # Prisma ORM Schema and migrations
-│   └── schema.prisma         # Data models (Worker, HealthRecord, Vaccination)
+│   ├── migrations/           # Versioned SQLite migration files
+│   ├── schema.prisma         # Data models (Worker, Facility, Visit, Screening, Treatment)
+│   └── seed.js               # Seed script with realistic Kerala healthcare records
 ├── .env                      # Local environment configuration (DATABASE_URL)
 ├── .env.example              # Example environment configuration
 ├── .gitignore                # Git ignore rules
@@ -58,9 +65,8 @@ migrant-health/
 
 ## 🛠️ Getting Started
 
-### 1. Clone & Navigate
+### 1. Navigate to Project
 ```bash
-git clone <repo-url>
 cd migrant-health
 ```
 
@@ -69,14 +75,13 @@ cd migrant-health
 npm install
 ```
 
-### 3. Setup Database (Prisma + SQLite)
-Initialize the SQLite database with the Prisma schema:
+### 3. Setup Database & Apply Migrations
 ```bash
-# Push schema to SQLite database (dev.db)
-npx prisma db push
+# Run migration on SQLite database (dev.db)
+npx prisma migrate dev
 
-# Generate Prisma Client
-npx prisma generate
+# Seed sample data (Facilities, Workers, Visits, Screenings, Treatments)
+node prisma/seed.js
 ```
 
 ### 4. Run Development Server
@@ -84,33 +89,78 @@ npx prisma generate
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🗄️ Database Models (Prisma)
+## 🌐 REST API Documentation
 
-- **`Worker`**: Core registry holding demographic details (Unique Health ID, Kerala Awaaz ID, Name, State of Origin, Native Language, Kerala District, Employer, Emergency Contacts, Chronic Conditions & Allergies).
-- **`HealthRecord`**: Clinical checkup logs, symptoms, diagnoses, prescriptions, vitals, and PHC/CHC facility references.
-- **`Vaccination`**: Immunization records (Tetanus Toxoid, Hepatitis B, COVID-19, etc.), dose sequence numbers, batch IDs, and due dates.
+### 1. Workers Registry (`/api/workers`)
+- **`GET /api/workers`**: Fetch all workers or search.
+  - Query parameters:
+    - `?portableHealthId=KL-MH-829104` (exact portable health ID lookup)
+    - `?q=Debabrata` (fuzzy search across name, home state, address, phone)
+- **`POST /api/workers`**: Register a new worker.
+  - Payload:
+    ```json
+    {
+      "name": "Bikash Mondal",
+      "gender": "Male",
+      "homeState": "West Bengal",
+      "phone": "+91 97321 00192",
+      "currentAddress": "Kalamassery, Ernakulam, Kerala",
+      "dob": "1995-11-20",
+      "portableHealthId": "KL-MH-829104" // Optional: auto-generated if omitted
+    }
+    ```
+  - Responses: `201 Created`, `400 Bad Request` (missing required fields), `409 Conflict` (duplicate `portableHealthId`).
 
----
+### 2. Full Worker Health History (`/api/workers/[id]`)
+- **`GET /api/workers/[id]`**: Retrieve complete health history by database ID or `portableHealthId`.
+  - Returns complete worker profile, visits with facility details, diagnostic screenings, treatments, and aggregated clinical summary.
+  - Responses: `200 OK`, `404 Not Found`.
+- **`PUT /api/workers/[id]`**: Update worker demographics.
 
-## 🌐 API Reference
+### 3. Clinical Visits (`/api/visits`)
+- **`GET /api/visits`**: List visits (filterable by `?workerId=`, `?portableHealthId=`, `?facilityId=`).
+- **`POST /api/visits`**: Record a visit.
+  - Payload:
+    ```json
+    {
+      "portableHealthId": "KL-MH-829104",
+      "facilityId": "fac-perumbavoor-chc",
+      "date": "2026-08-25T09:00:00Z",
+      "notes": "Routine checkup and respiratory screening."
+    }
+    ```
 
-### Health Check
-- `GET /api/health` — Check server and database status.
+### 4. Diagnostic Screenings (`/api/screenings`)
+- **`GET /api/screenings`**: List screenings (filterable by `?workerId=`, `?portableHealthId=`, `?facilityId=`, `?type=`).
+- **`POST /api/screenings`**: Record a screening.
+  - Payload:
+    ```json
+    {
+      "portableHealthId": "KL-MH-829104",
+      "facilityId": "fac-perumbavoor-chc",
+      "type": "Tuberculosis Screening (Mantoux)",
+      "result": "Negative"
+    }
+    ```
 
-### Workers Registry
-- `GET /api/workers` — Retrieve all worker records (supports query param `?q=` for searching by name, Health ID, phone, or district).
-- `POST /api/workers` — Register a new migrant worker profile.
+### 5. Treatment Plans & Prescriptions (`/api/treatments`)
+- **`GET /api/treatments`**: List treatments.
+- **`POST /api/treatments`**: Record treatment or prescription.
+  - Payload:
+    ```json
+    {
+      "portableHealthId": "KL-MH-829104",
+      "visitId": "visit-1", // Optional
+      "description": "Symptomatic treatment for seasonal dust allergy",
+      "medication": "Cetirizine 10mg OD x 5 days"
+    }
+    ```
 
----
-
-## 🏛️ Kerala District Coverage
-Key hubs targeted for rollout:
-- **Ernakulam** (Perumbavoor, Aluva, Kalamassery industrial belts)
-- **Kozhikode** (Construction & port logistics)
-- **Palakkad** (Kanjikode industrial cluster)
-- **Thiruvananthapuram** (Infrastructure & urban development)
-- **Wayanad & Idukki** (Plantation sectors)
+### 6. Facilities & Health Status
+- **`GET /api/facilities`**: List all connected PHCs, CHCs, and mobile camps.
+- **`POST /api/facilities`**: Register a healthcare facility.
+- **`GET /api/health`**: Real-time service health check and database statistics.
