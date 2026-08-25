@@ -16,9 +16,32 @@ Kerala hosts over 3 million inter-state migrant workers employed in construction
 
 ---
 
+## 🔐 Role-Based Authentication (RBAC)
+
+The application uses **NextAuth.js** with a **Credentials Provider** and **JWT Sessions**, enforcing two distinct access tiers:
+
+| Role / Access | Permitted Actions | Login Required? |
+| :--- | :--- | :---: |
+| **Public / Worker** | Look up health profile by Portable Health ID (`KL-MH-XXXXXX`), view clinical visit logs, screening test results, and prescriptions. | **No** (Public Access) |
+| **STAFF** | Register new workers, log clinical visits, record health screenings (TB, Malaria, BP), prescribe treatments/medications. | **Yes** (Credentials Login) |
+| **ADMIN** | All STAFF capabilities + registering healthcare facilities (PHCs, CHCs, Mobile Camps) and system administration. | **Yes** (Credentials Login) |
+
+### 🔑 Default Demo Credentials
+- **Facility Staff (Medical Officer)**:
+  - **Email**: `staff@keralahealth.gov.in`
+  - **Password**: `staff123`
+  - **Role**: `STAFF` (Linked to Perumbavoor CHC)
+- **Directorate Admin**:
+  - **Email**: `admin@keralahealth.gov.in`
+  - **Password**: `admin123`
+  - **Role**: `ADMIN`
+
+---
+
 ## 🚀 Tech Stack
 
 - **Framework**: [Next.js](https://nextjs.org/) (App Router, Server Components & Route Handlers)
+- **Authentication**: [NextAuth.js](https://next-auth.js.org/) (Credentials Provider, JWT Session Strategy, Bcryptjs)
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Database & ORM**: [Prisma ORM](https://www.prisma.io/) with **SQLite** for local development (production-ready for PostgreSQL / MySQL)
@@ -32,28 +55,34 @@ Kerala hosts over 3 million inter-state migrant workers employed in construction
 migrant-health/
 ├── app/                      # Next.js App Router (Layouts, Pages, API endpoints)
 │   ├── api/
-│   │   ├── facilities/route.ts# Facilities list & registration
+│   │   ├── auth/             # NextAuth Route Handler ([...nextauth])
+│   │   ├── facilities/route.ts# Facilities list & registration (Admin protected)
 │   │   ├── health/route.ts   # System & DB connectivity status
-│   │   ├── screenings/route.ts# Diagnostic & screening logs (POST / GET)
-│   │   ├── treatments/route.ts# Treatment plans & prescriptions (POST / GET)
-│   │   ├── visits/route.ts   # Clinical visits (POST / GET)
-│   │   ├── workers/route.ts  # Worker registry & portable ID search (POST / GET)
-│   │   └── workers/[id]/route.ts # Full worker health history by ID or portableHealthId
+│   │   ├── screenings/route.ts# Diagnostic screenings (Staff / Admin protected)
+│   │   ├── treatments/route.ts# Treatment plans (Staff / Admin protected)
+│   │   ├── visits/route.ts   # Clinical visits (Staff / Admin protected)
+│   │   ├── workers/route.ts  # Worker search (Public) & Worker creation (Staff/Admin)
+│   │   └── workers/[id]/route.ts # Full health history (Public) & Update (Staff/Admin)
+│   ├── login/page.tsx        # Staff & Admin Login Page with demo quick-fill
 │   ├── globals.css           # Tailwind CSS styles & CSS custom properties
-│   ├── layout.tsx            # Root layout with navigation & meta tags
+│   ├── layout.tsx            # Root layout with Providers & Navigation
 │   └── page.tsx              # Public health dashboard & registry overview
 ├── components/               # Reusable React UI Components
-│   ├── Navbar.tsx            # Header with language indicator & portal branding
+│   ├── Navbar.tsx            # Header with role badge, login/logout, and language info
+│   ├── Providers.tsx         # NextAuth SessionProvider wrapper
 │   ├── StatCard.tsx          # Metric cards for key health indicators
 │   └── WorkerRecordCard.tsx  # Detailed worker profile, visits & screenings card
 ├── lib/                      # Shared libraries and utilities
+│   ├── auth.ts               # NextAuth configuration & requireAuth helper
 │   ├── prisma.ts             # Prisma Client singleton
 │   └── utils.ts              # Helper functions (date formatting, ID generation)
 ├── prisma/                   # Prisma ORM Schema and migrations
 │   ├── migrations/           # Versioned SQLite migration files
-│   ├── schema.prisma         # Data models (Worker, Facility, Visit, Screening, Treatment)
-│   └── seed.js               # Seed script with realistic Kerala healthcare records
-├── .env                      # Local environment configuration (DATABASE_URL)
+│   ├── schema.prisma         # Data models (User, Worker, Facility, Visit, Screening, Treatment)
+│   └── seed.js               # Seed script with realistic Kerala healthcare records & auth users
+├── types/                    # TypeScript module augmentations
+│   └── next-auth.d.ts        # NextAuth Session & JWT type extensions
+├── .env                      # Local environment configuration (DATABASE_URL, NEXTAUTH_SECRET)
 ├── .env.example              # Example environment configuration
 ├── .gitignore                # Git ignore rules
 ├── package.json              # Project dependencies & scripts
@@ -65,7 +94,7 @@ migrant-health/
 
 ## 🛠️ Getting Started
 
-### 1. Navigate to Project
+### 1. Clone & Navigate
 ```bash
 cd migrant-health
 ```
@@ -75,12 +104,12 @@ cd migrant-health
 npm install
 ```
 
-### 3. Setup Database & Apply Migrations
+### 3. Setup Database & Seed Accounts
 ```bash
 # Run migration on SQLite database (dev.db)
 npx prisma migrate dev
 
-# Seed sample data (Facilities, Workers, Visits, Screenings, Treatments)
+# Seed sample workers, facilities, and staff/admin accounts
 node prisma/seed.js
 ```
 
@@ -90,77 +119,5 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
-
----
-
-## 🌐 REST API Documentation
-
-### 1. Workers Registry (`/api/workers`)
-- **`GET /api/workers`**: Fetch all workers or search.
-  - Query parameters:
-    - `?portableHealthId=KL-MH-829104` (exact portable health ID lookup)
-    - `?q=Debabrata` (fuzzy search across name, home state, address, phone)
-- **`POST /api/workers`**: Register a new worker.
-  - Payload:
-    ```json
-    {
-      "name": "Bikash Mondal",
-      "gender": "Male",
-      "homeState": "West Bengal",
-      "phone": "+91 97321 00192",
-      "currentAddress": "Kalamassery, Ernakulam, Kerala",
-      "dob": "1995-11-20",
-      "portableHealthId": "KL-MH-829104" // Optional: auto-generated if omitted
-    }
-    ```
-  - Responses: `201 Created`, `400 Bad Request` (missing required fields), `409 Conflict` (duplicate `portableHealthId`).
-
-### 2. Full Worker Health History (`/api/workers/[id]`)
-- **`GET /api/workers/[id]`**: Retrieve complete health history by database ID or `portableHealthId`.
-  - Returns complete worker profile, visits with facility details, diagnostic screenings, treatments, and aggregated clinical summary.
-  - Responses: `200 OK`, `404 Not Found`.
-- **`PUT /api/workers/[id]`**: Update worker demographics.
-
-### 3. Clinical Visits (`/api/visits`)
-- **`GET /api/visits`**: List visits (filterable by `?workerId=`, `?portableHealthId=`, `?facilityId=`).
-- **`POST /api/visits`**: Record a visit.
-  - Payload:
-    ```json
-    {
-      "portableHealthId": "KL-MH-829104",
-      "facilityId": "fac-perumbavoor-chc",
-      "date": "2026-08-25T09:00:00Z",
-      "notes": "Routine checkup and respiratory screening."
-    }
-    ```
-
-### 4. Diagnostic Screenings (`/api/screenings`)
-- **`GET /api/screenings`**: List screenings (filterable by `?workerId=`, `?portableHealthId=`, `?facilityId=`, `?type=`).
-- **`POST /api/screenings`**: Record a screening.
-  - Payload:
-    ```json
-    {
-      "portableHealthId": "KL-MH-829104",
-      "facilityId": "fac-perumbavoor-chc",
-      "type": "Tuberculosis Screening (Mantoux)",
-      "result": "Negative"
-    }
-    ```
-
-### 5. Treatment Plans & Prescriptions (`/api/treatments`)
-- **`GET /api/treatments`**: List treatments.
-- **`POST /api/treatments`**: Record treatment or prescription.
-  - Payload:
-    ```json
-    {
-      "portableHealthId": "KL-MH-829104",
-      "visitId": "visit-1", // Optional
-      "description": "Symptomatic treatment for seasonal dust allergy",
-      "medication": "Cetirizine 10mg OD x 5 days"
-    }
-    ```
-
-### 6. Facilities & Health Status
-- **`GET /api/facilities`**: List all connected PHCs, CHCs, and mobile camps.
-- **`POST /api/facilities`**: Register a healthcare facility.
-- **`GET /api/health`**: Real-time service health check and database statistics.
+- Browse public worker records at [http://localhost:3000](http://localhost:3000)
+- Sign in as Staff or Admin at [http://localhost:3000/login](http://localhost:3000/login)

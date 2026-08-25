@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateHealthId } from "@/lib/utils";
+import { requireAuth } from "@/lib/auth";
 
-// GET /api/workers - Search by portableHealthId, general query 'q', or list all
+// GET /api/workers - PUBLIC: Search by portableHealthId, query 'q', or list all (NO LOGIN REQUIRED)
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -92,9 +93,13 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/workers - Create a new worker record with validation
+// POST /api/workers - PROTECTED: Requires STAFF or ADMIN role
 export async function POST(request: Request) {
   try {
+    // Role check: Only STAFF or ADMIN can register workers
+    const authError = await requireAuth(["STAFF", "ADMIN"]);
+    if (authError) return authError;
+
     let body;
     try {
       body = await request.json();

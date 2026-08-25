@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
-// GET /api/facilities - List all registered healthcare facilities
+// GET /api/facilities - List all registered healthcare facilities (PUBLIC)
 export async function GET() {
   try {
     const facilities = await prisma.facility.findMany({
@@ -31,9 +32,12 @@ export async function GET() {
   }
 }
 
-// POST /api/facilities - Register a new healthcare facility or mobile camp
+// POST /api/facilities - Register a new healthcare facility (PROTECTED: ADMIN ONLY)
 export async function POST(request: Request) {
   try {
+    const authError = await requireAuth(["ADMIN"]);
+    if (authError) return authError;
+
     let body;
     try {
       body = await request.json();

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
-// GET /api/workers/[id] - Fetch full health history of a worker by id OR portableHealthId
+// GET /api/workers/[id] - PUBLIC: Fetch full health history by id OR portableHealthId (NO LOGIN REQUIRED)
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -92,12 +93,15 @@ export async function GET(
   }
 }
 
-// PUT /api/workers/[id] - Update worker demographics
+// PUT /api/workers/[id] - PROTECTED: Requires STAFF or ADMIN role
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const authError = await requireAuth(["STAFF", "ADMIN"]);
+    if (authError) return authError;
+
     const { id } = await params;
     const identifier = id?.trim();
 

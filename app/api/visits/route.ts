@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireAuth } from "@/lib/auth";
 
-// GET /api/visits - List visits with optional filters by workerId, portableHealthId, or facilityId
+// GET /api/visits - List visits
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -45,9 +46,12 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/visits - Add a new clinical visit record
+// POST /api/visits - PROTECTED: Requires STAFF or ADMIN role
 export async function POST(request: Request) {
   try {
+    const authError = await requireAuth(["STAFF", "ADMIN"]);
+    if (authError) return authError;
+
     let body;
     try {
       body = await request.json();

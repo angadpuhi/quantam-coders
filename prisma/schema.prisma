@@ -10,6 +10,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id         String    @id @default(cuid())
+  name       String
+  email      String    @unique
+  password   String    // Hashed with bcrypt
+  role       String    @default("STAFF") // "STAFF" or "ADMIN"
+  facilityId String?
+  facility   Facility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
 model Worker {
   id               String      @id @default(cuid())
   name             String
@@ -35,6 +47,7 @@ model Facility {
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
+  users      User[]
   visits     Visit[]
   screenings Screening[]
 }
