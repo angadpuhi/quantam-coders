@@ -1,5 +1,4 @@
 import React from "react";
-import { Activity } from "lucide-react";
 
 export default function Loading() {
   return (

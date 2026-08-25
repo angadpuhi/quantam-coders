@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import {
   Search,
   User,
@@ -25,6 +26,7 @@ import { formatDate } from "@/lib/utils";
 import { AddClinicalRecordForm } from "@/components/AddClinicalRecordForm";
 
 export function WorkerSearchLookup() {
+  const t = useTranslations("search");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [workerData, setWorkerData] = useState<any | null>(null);
@@ -64,7 +66,7 @@ export function WorkerSearchLookup() {
         setWorkerData(detailJson.data.worker);
       } else {
         setWorkerData(null);
-        setError(`No worker records found matching "${query}". Verify Portable Health ID or phone number.`);
+        setError(t("noResultsError", { query }));
       }
     } catch (err: any) {
       setError(err.message || "Failed to search workers.");
@@ -87,16 +89,16 @@ export function WorkerSearchLookup() {
           <div>
             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Search className="w-5 h-5 text-kerala-green-800" />
-              <span>Search Worker Health Registry</span>
+              <span>{t("title")}</span>
             </h2>
             <p className="text-xs text-slate-600 mt-0.5">
-              Lookup by <strong>Portable Health ID</strong> (e.g. `KL-MH-829104`) or <strong>Mobile Phone Number</strong>
+              {t("subtitle")}
             </p>
           </div>
 
           {/* Quick Demo Search Chips */}
           <div className="flex flex-wrap items-center gap-1.5 text-xs">
-            <span className="text-[11px] text-slate-500 font-medium">Quick Lookup:</span>
+            <span className="text-[11px] text-slate-500 font-medium">{t("quickLookup")}</span>
             <button
               type="button"
               onClick={() => quickSearch("KL-MH-829104")}
@@ -133,7 +135,7 @@ export function WorkerSearchLookup() {
             <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Enter Portable Health ID (e.g. KL-MH-829104) or Mobile Number..."
+              placeholder={t("inputPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-11 pr-4 py-3 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition"
@@ -144,7 +146,7 @@ export function WorkerSearchLookup() {
             disabled={loading}
             className="bg-kerala-green-800 hover:bg-kerala-green-900 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl text-sm shadow-xs transition flex items-center justify-center gap-2"
           >
-            {loading ? <span>Searching...</span> : <span>Search Registry</span>}
+            {loading ? <span>{t("searchingButton")}</span> : <span>{t("searchButton")}</span>}
           </button>
         </form>
 
@@ -180,12 +182,12 @@ export function WorkerSearchLookup() {
                   {workerData.dob && (
                     <>
                       <span>•</span>
-                      <span>DOB: {formatDate(workerData.dob)}</span>
+                      <span>{t("dobLabel")} {formatDate(workerData.dob)}</span>
                     </>
                   )}
                   <span>•</span>
                   <span>
-                    Home State: <strong className="text-kerala-green-900">{workerData.homeState}</strong>
+                    {t("homeStateOrigin")} <strong className="text-kerala-green-900">{workerData.homeState}</strong>
                   </span>
                 </div>
 
@@ -205,14 +207,14 @@ export function WorkerSearchLookup() {
                   className="bg-kerala-green-800 hover:bg-kerala-green-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-1.5"
                 >
                   <PlusCircle className="w-3.5 h-3.5" />
-                  <span>{showAddRecord ? "Hide Record Form" : "+ Add Clinical Record"}</span>
+                  <span>{showAddRecord ? t("hideRecordButton") : t("addRecordButton")}</span>
                 </button>
 
                 <Link
                   href={`/workers/${encodeURIComponent(workerData.portableHealthId || workerData.id)}`}
                   className="bg-kerala-coir-100 hover:bg-kerala-coir-200 text-kerala-coir-900 text-xs font-bold px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5 border border-kerala-coir-300"
                 >
-                  <span>Full Profile Page</span>
+                  <span>{t("fullProfileButton")}</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -240,7 +242,7 @@ export function WorkerSearchLookup() {
                   {workerData.visits?.length || 0}
                 </p>
                 <p className="text-[11px] font-semibold text-kerala-green-800 uppercase tracking-wider">
-                  Clinical Visits
+                  {t("clinicalVisitsMetric")}
                 </p>
               </div>
               <div className="bg-kerala-blue-50/70 p-3 rounded-xl border border-kerala-blue-100">
@@ -248,7 +250,7 @@ export function WorkerSearchLookup() {
                   {workerData.screenings?.length || 0}
                 </p>
                 <p className="text-[11px] font-semibold text-kerala-blue-800 uppercase tracking-wider">
-                  Screenings
+                  {t("screeningsMetric")}
                 </p>
               </div>
               <div className="bg-kerala-gold-50/70 p-3 rounded-xl border border-kerala-gold-200">
@@ -256,7 +258,7 @@ export function WorkerSearchLookup() {
                   {workerData.treatments?.length || 0}
                 </p>
                 <p className="text-[11px] font-semibold text-kerala-gold-800 uppercase tracking-wider">
-                  Treatments
+                  {t("treatmentsMetric")}
                 </p>
               </div>
             </div>
@@ -265,7 +267,7 @@ export function WorkerSearchLookup() {
             <div className="mt-6 space-y-4">
               <h4 className="text-base font-bold text-slate-900 flex items-center gap-2">
                 <Stethoscope className="w-4 h-4 text-kerala-green-800" />
-                <span>Clinical Visit History</span>
+                <span>{t("visitHistoryTitle")}</span>
               </h4>
 
               {workerData.visits && workerData.visits.length > 0 ? (
@@ -293,7 +295,7 @@ export function WorkerSearchLookup() {
 
                       {visit.notes && (
                         <p className="text-xs text-slate-700 leading-relaxed">
-                          <strong>Clinical Notes:</strong> {visit.notes}
+                          <strong>{t("notesLabel")}</strong> {visit.notes}
                         </p>
                       )}
 
@@ -302,14 +304,14 @@ export function WorkerSearchLookup() {
                         <div className="mt-2.5 pt-2 border-t border-slate-200/50 space-y-1">
                           <p className="text-[11px] font-bold text-kerala-blue-900 flex items-center gap-1">
                             <Pill className="w-3 h-3 text-kerala-blue-700" />
-                            Prescriptions & Care:
+                            {t("prescriptionsLabel")}
                           </p>
-                          {visit.treatments.map((t: any) => (
-                            <div key={t.id} className="text-xs text-slate-700 pl-4">
-                              <span>• {t.description}</span>
-                              {t.medication && (
+                          {visit.treatments.map((tItem: any) => (
+                            <div key={tItem.id} className="text-xs text-slate-700 pl-4">
+                              <span>• {tItem.description}</span>
+                              {tItem.medication && (
                                 <span className="font-semibold text-kerala-blue-800 ml-1">
-                                  ({t.medication})
+                                  ({tItem.medication})
                                 </span>
                               )}
                             </div>
@@ -321,7 +323,7 @@ export function WorkerSearchLookup() {
                 </div>
               ) : (
                 <p className="text-xs text-slate-500 italic p-3 bg-slate-50 rounded-xl">
-                  No clinical visits logged yet for this worker.
+                  {t("noVisitsMessage")}
                 </p>
               )}
             </div>
@@ -331,7 +333,7 @@ export function WorkerSearchLookup() {
               <div className="mt-6 space-y-3 pt-6 border-t border-kerala-coir-100">
                 <h4 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <Activity className="w-4 h-4 text-kerala-blue-800" />
-                  <span>Diagnostic & Health Screenings</span>
+                  <span>{t("screeningsTitle")}</span>
                 </h4>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

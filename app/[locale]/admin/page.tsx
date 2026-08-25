@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import {
   Users,
   Building2,
@@ -25,6 +26,7 @@ import { ScreeningsByTypeWidget } from "@/components/ScreeningsByTypeWidget";
 import { formatDate } from "@/lib/utils";
 
 export default function AdminDashboardPage() {
+  const t = useTranslations("admin");
   const [statsData, setStatsData] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -106,15 +108,15 @@ export default function AdminDashboardPage() {
             <div className="max-w-2xl">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/30 border border-kerala-gold-400/40 text-xs font-semibold text-kerala-gold-200 mb-4 backdrop-blur-xs">
                 <HeartPulse className="w-3.5 h-3.5 text-kerala-gold-400" />
-                <span>Kerala Directorate of Health Services (DHS)</span>
+                <span>{t("heroBadge")}</span>
               </div>
 
               <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
-                Public Health Surveillance & Analytics
+                {t("heroTitle")}
               </h1>
 
               <p className="mt-3 text-emerald-100 text-sm sm:text-base leading-relaxed">
-                Real-time epidemiological monitoring of guest worker health cohorts (*Athidhi Thozhilalikal*), disease screening trends, and facility-level clinical throughput across Kerala.
+                {t("heroDesc")}
               </p>
             </div>
 
@@ -122,7 +124,7 @@ export default function AdminDashboardPage() {
             <div className="bg-black/30 border border-kerala-gold-400/50 rounded-2xl p-4 sm:p-5 backdrop-blur-xs text-right shrink-0">
               <div className="flex items-center justify-end gap-2 text-xs font-bold text-kerala-gold-300">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Surveillance Period</span>
+                <span>{t("surveillancePeriod")}</span>
               </div>
               <p className="text-lg font-extrabold text-white mt-1">{surveillanceMonth}</p>
               <button
@@ -131,7 +133,7 @@ export default function AdminDashboardPage() {
                 className="mt-3 inline-flex items-center gap-1.5 text-xs text-emerald-200 hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span>Refresh Live Data</span>
+                <span>{t("refreshButton")}</span>
               </button>
             </div>
           </div>
@@ -141,30 +143,30 @@ export default function AdminDashboardPage() {
       {/* Aggregate KPI Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Total Workers Enrolled"
+          title={t("statWorkers")}
           value={metrics.totalWorkers}
-          description="Portable Health IDs Issued"
+          description={t("statWorkersDesc")}
           icon={Users}
           colorClass="bg-kerala-green-800 text-white"
         />
         <StatCard
-          title="Screenings This Month"
+          title={t("statScreeningsMonth")}
           value={metrics.screeningsThisMonth}
-          description={`${metrics.totalScreenings} Total Screenings Logged`}
+          description={t("statScreeningsDesc", { total: metrics.totalScreenings })}
           icon={Activity}
           colorClass="bg-kerala-blue-800 text-white"
         />
         <StatCard
-          title="Visits This Month"
+          title={t("statVisitsMonth")}
           value={metrics.visitsThisMonth}
-          description={`${metrics.totalVisits} Total Consultations`}
+          description={t("statVisitsDesc", { total: metrics.totalVisits })}
           icon={Stethoscope}
           colorClass="bg-kerala-green-700 text-white"
         />
         <StatCard
-          title="Prescriptions & Regimens"
+          title={t("statTreatments")}
           value={metrics.totalTreatments}
-          description="Occupational Care Protocols"
+          description={t("statTreatmentsDesc")}
           icon={Pill}
           colorClass="bg-kerala-gold-700 text-white"
         />
@@ -181,14 +183,14 @@ export default function AdminDashboardPage() {
                   <BarChart3 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Visits per Healthcare Facility</h2>
+                  <h2 className="text-lg font-bold text-slate-900">{t("visitsChartTitle")}</h2>
                   <p className="text-xs text-slate-500">
-                    Comparative throughput across CHCs, PHCs, General Hospitals & Mobile Camps
+                    {t("visitsChartDesc")}
                   </p>
                 </div>
               </div>
               <span className="text-xs font-semibold bg-kerala-green-50 text-kerala-green-900 px-2.5 py-1 rounded-full">
-                {facilityVisitsChart.length} Facilities Active
+                {t("facilitiesActiveBadge", { count: facilityVisitsChart.length })}
               </span>
             </div>
 
@@ -204,9 +206,9 @@ export default function AdminDashboardPage() {
                   <MapPin className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Worker Origin State Distribution</h2>
+                  <h2 className="text-lg font-bold text-slate-900">{t("stateDistributionTitle")}</h2>
                   <p className="text-xs text-slate-500">
-                    Inter-state guest worker demographic breakdown
+                    {t("stateDistributionDesc")}
                   </p>
                 </div>
               </div>
@@ -216,11 +218,11 @@ export default function AdminDashboardPage() {
               {stateDistribution.map((item: any) => (
                 <div key={item.state} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-0">
                   <div className="flex items-center gap-2 font-medium text-slate-800">
-                    <span className="w-2 h-2 rounded-full bg-kerala-green-700" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-kerala-green-700" />
                     <span>{item.state}</span>
                   </div>
                   <div className="flex items-center gap-3 font-mono">
-                    <span className="font-bold text-slate-900">{item.count} workers</span>
+                    <span className="font-bold text-slate-900">{t("workersCount", { count: item.count })}</span>
                     <span className="text-slate-500 font-semibold w-12 text-right">({item.percentage}%)</span>
                   </div>
                 </div>
@@ -239,8 +241,8 @@ export default function AdminDashboardPage() {
                   <Activity className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Screenings by Type This Month</h2>
-                  <p className="text-xs text-slate-500">Disease surveillance breakdown</p>
+                  <h2 className="text-base font-bold text-slate-900">{t("screeningsByTypeTitle")}</h2>
+                  <p className="text-xs text-slate-500">{t("screeningsByTypeDesc")}</p>
                 </div>
               </div>
             </div>
@@ -253,13 +255,13 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between gap-2 border-b border-kerala-coir-100 pb-3 mb-4">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <HeartPulse className="w-4 h-4 text-kerala-green-800" />
-                <span>Live Screening Logs</span>
+                <span>{t("liveLogsTitle")}</span>
               </h3>
               <Link
                 href="/registry"
                 className="text-xs font-semibold text-kerala-green-800 hover:underline flex items-center gap-1"
               >
-                <span>Registry</span>
+                <span>{t("registryLink")}</span>
                 <ArrowRight className="w-3 h-3" />
               </Link>
             </div>

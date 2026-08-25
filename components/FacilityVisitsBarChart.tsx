@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { Building2, MapPin, BarChart3, Users, Stethoscope } from "lucide-react";
 
 interface FacilityData {
@@ -15,6 +16,8 @@ interface FacilityData {
 }
 
 export function FacilityVisitsBarChart({ facilities }: { facilities: FacilityData[] }) {
+  const t = useTranslations("common");
+
   if (!facilities || facilities.length === 0) {
     return (
       <div className="text-center py-10 text-slate-500 bg-slate-50 rounded-2xl">
@@ -24,15 +27,13 @@ export function FacilityVisitsBarChart({ facilities }: { facilities: FacilityDat
     );
   }
 
-  // Calculate maximum visit count for proportional bar widths
   const maxVisits = Math.max(...facilities.map((f) => f.visitCount), 1);
 
   return (
     <div className="space-y-4">
-      {facilities.map((facility, index) => {
+      {facilities.map((facility) => {
         const percentage = Math.round((facility.visitCount / maxVisits) * 100);
 
-        // Facility type tag colors
         const typeBadgeStyle =
           facility.type === "CHC"
             ? "bg-kerala-green-100 text-kerala-green-900 border-kerala-green-300"
@@ -67,12 +68,12 @@ export function FacilityVisitsBarChart({ facilities }: { facilities: FacilityDat
               <div className="flex items-center justify-between text-xs">
                 <span className="text-slate-600 font-medium flex items-center gap-1.5">
                   <Stethoscope className="w-3.5 h-3.5 text-kerala-green-800" />
-                  <span>Clinical Consultations</span>
+                  <span>{t("consultations")}</span>
                 </span>
                 <span className="font-mono font-bold text-slate-900 text-sm">
                   {facility.visitCount}{" "}
                   <span className="text-[11px] text-slate-500 font-normal">
-                    ({facility.screeningCount} screenings)
+                    ({facility.screeningCount} {t("screenings").toLowerCase()})
                   </span>
                 </span>
               </div>

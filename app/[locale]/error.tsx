@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { AlertCircle, RefreshCw, Home, ArrowLeft } from "lucide-react";
 
 export default function GlobalError({
@@ -11,6 +12,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useTranslations("common");
+
   useEffect(() => {
     console.error("Application error caught by Error Boundary:", error);
   }, [error]);
@@ -25,9 +28,9 @@ export default function GlobalError({
           <AlertCircle className="w-8 h-8" />
         </div>
 
-        <h1 className="text-xl font-bold text-slate-900">An Unexpected Error Occurred</h1>
+        <h1 className="text-xl font-bold text-slate-900">{t("errorOccurred")}</h1>
         <p className="text-xs text-slate-600 mt-2 leading-relaxed">
-          The Kerala MigrantHealth portal encountered an unexpected issue while rendering this view.
+          {t("errorDesc")}
         </p>
 
         {error?.message && (
@@ -43,7 +46,7 @@ export default function GlobalError({
             className="inline-flex items-center gap-2 bg-kerala-green-800 hover:bg-kerala-green-900 text-white text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl shadow-xs transition"
           >
             <RefreshCw className="w-4 h-4" />
-            <span>Try Again</span>
+            <span>{t("tryAgain")}</span>
           </button>
 
           <Link
@@ -51,7 +54,7 @@ export default function GlobalError({
             className="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs sm:text-sm font-semibold px-4 py-2.5 rounded-xl transition"
           >
             <Home className="w-4 h-4" />
-            <span>Return to Dashboard</span>
+            <span>{t("returnDashboard")}</span>
           </Link>
         </div>
       </div>

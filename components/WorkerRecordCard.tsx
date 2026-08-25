@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 import { User, Phone, MapPin, Building, FileText, Activity, Stethoscope, Pill, ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
@@ -46,6 +49,8 @@ export interface WorkerWithDetails {
 }
 
 export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
+  const t = useTranslations("common");
+
   return (
     <div className="bg-white rounded-houseboat border border-kerala-coir-200 overflow-hidden shadow-xs hover:border-kerala-green-400 transition-all">
       <div className="p-5 sm:p-6">
@@ -98,7 +103,7 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
           <div className="mb-3 p-3 rounded-2xl bg-kerala-blue-50/50 border border-kerala-blue-200/60 text-xs">
             <div className="font-semibold text-kerala-blue-950 mb-1.5 flex items-center gap-1.5">
               <Activity className="w-3.5 h-3.5 text-kerala-blue-800" />
-              Health Screenings:
+              {t("healthScreenings")}
             </div>
             <div className="space-y-1">
               {worker.screenings.map((sc) => (
@@ -118,15 +123,15 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
               <Stethoscope className="w-3.5 h-3.5 text-kerala-green-800" />
-              {worker.visits?.length || 0} Visits
+              {worker.visits?.length || 0} {t("visits")}
             </span>
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
               <Activity className="w-3.5 h-3.5 text-kerala-blue-800" />
-              {worker.screenings?.length || 0} Screenings
+              {worker.screenings?.length || 0} {t("screenings")}
             </span>
             <span className="flex items-center gap-1.5 font-medium text-slate-700">
               <Pill className="w-3.5 h-3.5 text-kerala-gold-700" />
-              {worker.treatments?.length || 0} Treatments
+              {worker.treatments?.length || 0} {t("treatments")}
             </span>
           </div>
 
@@ -134,7 +139,7 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
             href={`/workers/${encodeURIComponent(worker.portableHealthId || worker.id)}`}
             className="font-bold text-kerala-green-900 hover:text-kerala-green-700 flex items-center gap-1 hover:underline"
           >
-            <span>View Profile & Add Record</span>
+            <span>{t("viewProfileAndAdd")}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

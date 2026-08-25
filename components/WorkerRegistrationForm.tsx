@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import {
   UserPlus,
   CreditCard,
@@ -19,7 +21,6 @@ import {
   LogIn,
   ExternalLink,
 } from "lucide-react";
-import Link from "next/link";
 
 const TOP_MIGRANT_STATES = [
   "West Bengal",
@@ -32,6 +33,7 @@ const TOP_MIGRANT_STATES = [
 ];
 
 export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: (worker: any) => void }) {
+  const t = useTranslations("registrationForm");
   const { data: session } = useSession();
 
   const [name, setName] = useState("");
@@ -119,23 +121,23 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
               <UserPlus className="w-5 h-5" />
             </div>
             <h2 className="text-xl font-bold text-slate-900">
-              Register Migrant Guest Worker
+              {t("title")}
             </h2>
           </div>
           <p className="text-xs text-slate-600 mt-1">
-            Enroll a new worker to generate a permanent Portable Health ID (*Athidhi Swasthya Card*)
+            {t("subtitle")}
           </p>
         </div>
 
         {!session && (
           <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 text-xs px-3 py-1.5 rounded-xl">
             <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
-            <span>Staff login required to save</span>
+            <span>{t("loginRequiredNotice")}</span>
             <Link
               href="/login"
               className="font-semibold text-emerald-800 hover:underline flex items-center gap-0.5 ml-1"
             >
-              Sign In <LogIn className="w-3 h-3" />
+              {t("signInLink")} <LogIn className="w-3 h-3" />
             </Link>
           </div>
         )}
@@ -149,11 +151,11 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-kerala-gold-400" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-kerala-gold-300">
-                  Worker Enrolled Successfully
+                  {t("successBadge")}
                 </span>
               </div>
               <span className="text-[11px] bg-white/15 px-2.5 py-0.5 rounded-full border border-white/20">
-                Kerala Portable Health Record
+                {t("portableRecordTag")}
               </span>
             </div>
 
@@ -163,11 +165,11 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
                 <div className="flex flex-wrap items-center gap-3 text-xs text-emerald-100 mt-1">
                   <span>{createdWorker.gender}</span>
                   <span>•</span>
-                  <span>Origin: {createdWorker.homeState}</span>
+                  <span>{t("originLabel")}: {createdWorker.homeState}</span>
                   {createdWorker.phone && (
                     <>
                       <span>•</span>
-                      <span>Phone: {createdWorker.phone}</span>
+                      <span>{t("phoneLabel")}: {createdWorker.phone}</span>
                     </>
                   )}
                 </div>
@@ -175,7 +177,7 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
 
               <div className="bg-black/30 border border-kerala-gold-400/50 rounded-xl p-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase font-bold text-kerala-gold-300">Portable Health ID</p>
+                  <p className="text-[10px] uppercase font-bold text-kerala-gold-300">{t("portableIdLabel")}</p>
                   <p className="font-mono text-lg font-extrabold text-white tracking-wider">
                     {createdWorker.portableHealthId}
                   </p>
@@ -184,7 +186,7 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
                   type="button"
                   onClick={handleCopyId}
                   className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition flex items-center gap-1 text-xs"
-                  title="Copy Health ID"
+                  title={t("copyButton")}
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
@@ -194,7 +196,7 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
             {createdWorker.currentAddress && (
               <p className="text-xs text-emerald-200 mt-3 flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-kerala-gold-400 shrink-0" />
-                <span>Local Address: {createdWorker.currentAddress}</span>
+                <span>{t("localAddressLabel")}: {createdWorker.currentAddress}</span>
               </p>
             )}
 
@@ -204,7 +206,7 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
                 href={`/workers/${encodeURIComponent(createdWorker.portableHealthId)}`}
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-kerala-gold-500 hover:bg-kerala-gold-400 text-slate-950 px-3.5 py-1.5 rounded-lg shadow-xs transition"
               >
-                <span>Open Full Profile & Log Clinical Visits</span>
+                <span>{t("openProfileButton")}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
             </div>
@@ -217,7 +219,7 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2.5">
           <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
           <div>
-            <p className="font-semibold text-red-900">Registration Error</p>
+            <p className="font-semibold text-red-900">{t("errorHeading")}</p>
             <p className="mt-0.5">{error}</p>
           </div>
         </div>
@@ -229,14 +231,14 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
           {/* Full Name */}
           <div>
             <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Full Legal Name <span className="text-red-500">*</span>
+              {t("legalNameLabel")} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
               <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 required
-                placeholder="e.g. Subhash Chandra Roy"
+                placeholder={t("legalNamePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition"
@@ -248,22 +250,22 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                Gender <span className="text-red-500">*</span>
+                {t("genderLabel")} <span className="text-red-500">*</span>
               </label>
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
                 className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition"
               >
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Other">Other</option>
+                <option value="Male">{t("genderMale")}</option>
+                <option value="Female">{t("genderFemale")}</option>
+                <option value="Other">{t("genderOther")}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                Date of Birth
+                {t("dobLabel")}
               </label>
               <div className="relative">
                 <input
@@ -279,13 +281,13 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
           {/* Phone Number */}
           <div>
             <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Contact / Mobile Number
+              {t("phoneInputLabel")}
             </label>
             <div className="relative">
               <Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="tel"
-                placeholder="+91 98765 43210"
+                placeholder={t("phonePlaceholder")}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full pl-9 pr-3 py-2.5 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition"
@@ -296,19 +298,19 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
           {/* Home State */}
           <div>
             <label className="block text-xs font-bold text-slate-800 mb-1.5">
-              Home State of Origin <span className="text-red-500">*</span>
+              {t("homeStateLabel")} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               required
-              placeholder="e.g. West Bengal, Assam, Bihar"
+              placeholder={t("homeStatePlaceholder")}
               value={homeState}
               onChange={(e) => setHomeState(e.target.value)}
               className="w-full px-3 py-2.5 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition"
             />
             {/* Quick State Chips */}
             <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              <span className="text-[10px] text-slate-500">Quick select:</span>
+              <span className="text-[10px] text-slate-500">{t("quickSelect")}</span>
               {TOP_MIGRANT_STATES.map((st) => (
                 <button
                   key={st}
@@ -330,13 +332,13 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
         {/* Current Address in Kerala */}
         <div>
           <label className="block text-xs font-bold text-slate-800 mb-1.5">
-            Current Worksite / Residential Address in Kerala
+            {t("currentAddressLabel")}
           </label>
           <div className="relative">
             <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
             <textarea
               rows={2}
-              placeholder="e.g. Shed No. 12, Plywood Industrial Cluster, Rayonpuram, Perumbavoor, Ernakulam"
+              placeholder={t("currentAddressPlaceholder")}
               value={currentAddress}
               onChange={(e) => setCurrentAddress(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700 focus:border-transparent transition"
@@ -350,10 +352,10 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
             <div>
               <div className="flex items-center gap-2">
                 <CreditCard className="w-4 h-4 text-kerala-gold-700" />
-                <span className="text-xs font-bold text-slate-900">Portable Health ID Assignment</span>
+                <span className="text-xs font-bold text-slate-900">{t("idAssignmentTitle")}</span>
               </div>
               <p className="text-[11px] text-slate-600 mt-0.5">
-                Automatically generate a standard Kerala Health ID (`KL-MH-XXXXXX`) or specify an existing health card.
+                {t("idAssignmentDesc")}
               </p>
             </div>
 
@@ -364,18 +366,18 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
                 onChange={(e) => setAutoGenerateId(e.target.checked)}
                 className="w-4 h-4 text-kerala-green-700 rounded border-slate-300 focus:ring-kerala-green-700"
               />
-              <span>Auto-generate Health ID</span>
+              <span>{t("autoGenerateCheckbox")}</span>
             </label>
           </div>
 
           {!autoGenerateId && (
             <div className="mt-3 pt-3 border-t border-kerala-coir-200">
               <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Custom / Pre-issued Portable Health ID
+                {t("customIdLabel")}
               </label>
               <input
                 type="text"
-                placeholder="e.g. KL-MH-998822"
+                placeholder={t("customIdPlaceholder")}
                 value={customHealthId}
                 onChange={(e) => setCustomHealthId(e.target.value)}
                 className="w-full max-w-sm px-3 py-2 text-sm bg-white border border-kerala-coir-300 rounded-lg font-mono uppercase focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700"
@@ -392,10 +394,10 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
             className="bg-gradient-to-r from-kerala-green-800 via-kerala-green-700 to-kerala-blue-800 hover:from-kerala-green-900 hover:to-kerala-blue-900 disabled:opacity-50 text-white font-semibold px-6 py-3 rounded-xl text-sm shadow-md transition-all flex items-center gap-2"
           >
             {loading ? (
-              <span>Registering Worker...</span>
+              <span>{t("submittingButton")}</span>
             ) : (
               <>
-                <span>Complete Registration & Issue Health Card</span>
+                <span>{t("submitButton")}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
             )}

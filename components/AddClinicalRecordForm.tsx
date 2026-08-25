@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 import {
   Stethoscope,
   Activity,
@@ -16,7 +18,6 @@ import {
   LogIn,
   ArrowRight,
 } from "lucide-react";
-import Link from "next/link";
 
 interface AddClinicalRecordFormProps {
   workerId: string;
@@ -53,6 +54,7 @@ export function AddClinicalRecordForm({
   onRecordAdded,
   onClose,
 }: AddClinicalRecordFormProps) {
+  const t = useTranslations("clinicalForm");
   const { data: session } = useSession();
 
   const [activeTab, setActiveTab] = useState<"visit" | "screening" | "treatment">("visit");
@@ -88,7 +90,6 @@ export function AddClinicalRecordForm({
         const json = await res.json();
         if (json.success && json.data?.length > 0) {
           setFacilities(json.data);
-          // Set default facility (prefer user's facility if logged in, else first)
           if (session?.user?.facilityId) {
             setSelectedFacilityId(session.user.facilityId);
           } else {
@@ -172,10 +173,10 @@ export function AddClinicalRecordForm({
 
       setSuccessMessage(
         activeTab === "visit"
-          ? "Clinical visit recorded successfully!"
+          ? t("successVisit")
           : activeTab === "screening"
-          ? "Diagnostic screening test logged successfully!"
-          : "Treatment & medication plan added successfully!"
+          ? t("successScreening")
+          : t("successTreatment")
       );
 
       // Reset tab specific inputs
@@ -203,14 +204,14 @@ export function AddClinicalRecordForm({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-kerala-gold-700 bg-kerala-gold-50 px-2.5 py-0.5 rounded-full border border-kerala-gold-200">
-              Clinical Entry Form
+              {t("badge")}
             </span>
             <span className="font-mono text-xs font-semibold text-kerala-green-900 bg-kerala-green-50 px-2 py-0.5 rounded border border-kerala-green-200">
               {portableHealthId}
             </span>
           </div>
           <h3 className="text-lg font-bold text-slate-900 mt-1">
-            Add Medical Record for <span className="text-kerala-green-900">{workerName}</span>
+            {t("title", { name: workerName })}
           </h3>
         </div>
 
@@ -231,19 +232,19 @@ export function AddClinicalRecordForm({
         <div className="my-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-amber-700 shrink-0" />
-            <span>Staff login required to save clinical updates.</span>
+            <span>{t("loginRequired")}</span>
           </div>
           <Link
             href="/login"
             className="font-semibold text-kerala-green-900 hover:underline flex items-center gap-1 shrink-0"
           >
             <LogIn className="w-3.5 h-3.5" />
-            <span>Sign In</span>
+            <span>{t("signIn")}</span>
           </Link>
         </div>
       )}
 
-      {/* Record Type Tabs - Styled with Kerala Coastal Palette */}
+      {/* Record Type Tabs */}
       <div className="flex space-x-2 my-5 p-1 bg-kerala-coir-50 rounded-2xl border border-kerala-coir-200">
         <button
           type="button"
@@ -259,7 +260,7 @@ export function AddClinicalRecordForm({
           }`}
         >
           <Stethoscope className="w-3.5 h-3.5" />
-          <span>Clinical Visit</span>
+          <span>{t("tabVisit")}</span>
         </button>
 
         <button
@@ -276,7 +277,7 @@ export function AddClinicalRecordForm({
           }`}
         >
           <Activity className="w-3.5 h-3.5" />
-          <span>Health Screening</span>
+          <span>{t("tabScreening")}</span>
         </button>
 
         <button
@@ -293,7 +294,7 @@ export function AddClinicalRecordForm({
           }`}
         >
           <Pill className="w-3.5 h-3.5" />
-          <span>Treatment Plan</span>
+          <span>{t("tabTreatment")}</span>
         </button>
       </div>
 
@@ -315,12 +316,12 @@ export function AddClinicalRecordForm({
 
       {/* Dynamic Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Facility & Date Fields (Required for Visit and Screening) */}
+        {/* Facility & Date Fields */}
         {activeTab !== "treatment" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Healthcare Facility / Medical Camp <span className="text-red-500">*</span>
+                {t("facilityLabel")} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -341,7 +342,7 @@ export function AddClinicalRecordForm({
 
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Date of Consultation / Screening <span className="text-red-500">*</span>
+                {t("dateLabel")} <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -360,12 +361,12 @@ export function AddClinicalRecordForm({
         {activeTab === "visit" && (
           <div>
             <label className="block text-xs font-bold text-slate-800 mb-1">
-              Clinical Assessment & Doctor's Notes <span className="text-red-500">*</span>
+              {t("visitNotesLabel")} <span className="text-red-500">*</span>
             </label>
             <textarea
               rows={3}
               required
-              placeholder="e.g. Worker presented with mild respiratory symptoms following night shift at plywood mill. Normal chest auscultation, BP 120/80. Prescribed antihistamine and advised N95 respirator mask."
+              placeholder={t("visitNotesPlaceholder")}
               value={visitNotes}
               onChange={(e) => setVisitNotes(e.target.value)}
               className="w-full p-3 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-green-700"
@@ -378,16 +379,16 @@ export function AddClinicalRecordForm({
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Screening / Diagnostic Test Type <span className="text-red-500">*</span>
+                {t("screeningTypeLabel")} <span className="text-red-500">*</span>
               </label>
               <select
                 value={screeningType}
                 onChange={(e) => setScreeningType(e.target.value)}
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-blue-700"
               >
-                {COMMON_SCREENING_TYPES.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                {COMMON_SCREENING_TYPES.map((typeOption) => (
+                  <option key={typeOption} value={typeOption}>
+                    {typeOption}
                   </option>
                 ))}
                 <option value="Custom">Other Diagnostic Test (Enter Below)</option>
@@ -396,7 +397,7 @@ export function AddClinicalRecordForm({
               {screeningType === "Custom" && (
                 <input
                   type="text"
-                  placeholder="Specify custom test name..."
+                  placeholder={t("customTypePlaceholder")}
                   value={customScreeningType}
                   onChange={(e) => setCustomScreeningType(e.target.value)}
                   className="w-full mt-2 px-3 py-2 text-sm bg-white border border-kerala-coir-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-kerala-blue-700"
@@ -406,16 +407,16 @@ export function AddClinicalRecordForm({
 
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Test Result / Findings <span className="text-red-500">*</span>
+                {t("screeningResultLabel")} <span className="text-red-500">*</span>
               </label>
               <select
                 value={screeningResult}
                 onChange={(e) => setScreeningResult(e.target.value)}
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-blue-700"
               >
-                {COMMON_SCREENING_RESULTS.map((r) => (
-                  <option key={r} value={r}>
-                    {r}
+                {COMMON_SCREENING_RESULTS.map((resOption) => (
+                  <option key={resOption} value={resOption}>
+                    {resOption}
                   </option>
                 ))}
                 <option value="Custom">Other Result Value</option>
@@ -424,7 +425,7 @@ export function AddClinicalRecordForm({
               {screeningResult === "Custom" && (
                 <input
                   type="text"
-                  placeholder="e.g. 110 mg/dL, Reactive, Clear"
+                  placeholder={t("customResultPlaceholder")}
                   value={customScreeningResult}
                   onChange={(e) => setCustomScreeningResult(e.target.value)}
                   className="w-full mt-2 px-3 py-2 text-sm bg-white border border-kerala-coir-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-kerala-blue-700"
@@ -439,12 +440,12 @@ export function AddClinicalRecordForm({
           <div className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Treatment Description / Diagnosis <span className="text-red-500">*</span>
+                {t("treatmentDescLabel")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 required
-                placeholder="e.g. Heat exhaustion thermal recovery protocol & electrolyte replenishment"
+                placeholder={t("treatmentDescPlaceholder")}
                 value={treatmentDescription}
                 onChange={(e) => setTreatmentDescription(e.target.value)}
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-gold-700"
@@ -453,11 +454,11 @@ export function AddClinicalRecordForm({
 
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Prescribed Medication & Dosage
+                {t("medicationLabel")}
               </label>
               <input
                 type="text"
-                placeholder="e.g. ORS sachets x 3 days, Paracetamol 500mg SOS, Multivitamin tab 1 OD"
+                placeholder={t("medicationPlaceholder")}
                 value={medication}
                 onChange={(e) => setMedication(e.target.value)}
                 className="w-full px-3 py-2 text-sm bg-slate-50 border border-kerala-coir-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-kerala-gold-700"
@@ -466,7 +467,7 @@ export function AddClinicalRecordForm({
 
             <div>
               <label className="block text-xs font-bold text-slate-800 mb-1">
-                Date Prescribed <span className="text-red-500">*</span>
+                {t("prescribedDateLabel")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -487,7 +488,7 @@ export function AddClinicalRecordForm({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
             >
-              Cancel
+              {t("cancelButton")}
             </button>
           )}
 
@@ -503,15 +504,15 @@ export function AddClinicalRecordForm({
             }`}
           >
             {submitting ? (
-              <span>Saving Entry...</span>
+              <span>{t("savingButton")}</span>
             ) : (
               <>
                 <span>
                   {activeTab === "visit"
-                    ? "Log Clinical Visit"
+                    ? t("logVisitButton")
                     : activeTab === "screening"
-                    ? "Log Screening Record"
-                    : "Add Treatment Plan"}
+                    ? t("logScreeningButton")
+                    : t("addTreatmentButton")}
                 </span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </>
