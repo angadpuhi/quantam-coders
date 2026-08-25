@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { KeralaMotif } from "@/components/KeralaMotif";
 import { AddClinicalRecordForm } from "@/components/AddClinicalRecordForm";
+import { RiskStatusBadge } from "@/components/RiskStatusBadge";
 import { formatDate } from "@/lib/utils";
 
 export default function WorkerDetailPage({
@@ -139,9 +140,18 @@ export default function WorkerDetailPage({
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/30 border border-kerala-gold-400/40 text-xs font-semibold text-kerala-gold-200 mb-3 backdrop-blur-xs">
-                <ShieldCheck className="w-3.5 h-3.5 text-kerala-gold-400" />
-                <span>{t("verifiedProfileBadge")}</span>
+              <div className="flex flex-wrap items-center gap-2.5 mb-3">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/30 border border-kerala-gold-400/40 text-xs font-semibold text-kerala-gold-200 backdrop-blur-xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-kerala-gold-400" />
+                  <span>{t("verifiedProfileBadge")}</span>
+                </div>
+
+                {/* Color-Coded Triage Risk Badge for Camp Scanning */}
+                <RiskStatusBadge
+                  status={workerData.riskStatus || "GREEN"}
+                  variant="dark"
+                  size="sm"
+                />
               </div>
 
               <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">

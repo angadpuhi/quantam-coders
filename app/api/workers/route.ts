@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { name, dob, gender, phone, homeState, currentAddress, portableHealthId } = body;
+    const { name, dob, gender, phone, homeState, currentAddress, portableHealthId, riskStatus } = body;
 
     // Field validation
     const missingFields: string[] = [];
@@ -164,6 +164,12 @@ export async function POST(request: Request) {
       parsedDob = d;
     }
 
+    // Validate riskStatus
+    const validRisks = ["GREEN", "YELLOW", "RED"];
+    const finalRisk = riskStatus && typeof riskStatus === "string" && validRisks.includes(riskStatus.toUpperCase())
+      ? riskStatus.toUpperCase()
+      : "GREEN";
+
     const newWorker = await prisma.worker.create({
       data: {
         name: name.trim(),
@@ -173,6 +179,7 @@ export async function POST(request: Request) {
         homeState: homeState.trim(),
         currentAddress: currentAddress ? String(currentAddress).trim() : null,
         portableHealthId: finalHealthId,
+        riskStatus: finalRisk,
       },
     });
 

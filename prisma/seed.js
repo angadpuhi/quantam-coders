@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding Kerala MigrantHealth database with Auth Users and rich Health Passport Records...");
+  console.log("Seeding Kerala MigrantHealth database with Auth Users and rich Health Passport Records with Risk Statuses...");
 
   // 1. Create Facilities
   const perumbavoorCHC = await prisma.facility.upsert({
@@ -78,7 +78,8 @@ async function main() {
     },
   });
 
-  // 3. Create Workers
+  // 3. Create Workers with distinct Risk Statuses
+  // Worker 1: GREEN (Stable)
   const worker1 = await prisma.worker.upsert({
     where: { portableHealthId: "KL-MH-829104" },
     update: {
@@ -88,6 +89,7 @@ async function main() {
       phone: "+91 98312 44910",
       homeState: "West Bengal",
       currentAddress: "Plywood Colony, Rayonpuram, Perumbavoor, Ernakulam, Kerala",
+      riskStatus: "GREEN",
     },
     create: {
       id: "worker-1",
@@ -98,9 +100,11 @@ async function main() {
       homeState: "West Bengal",
       currentAddress: "Plywood Colony, Rayonpuram, Perumbavoor, Ernakulam, Kerala",
       portableHealthId: "KL-MH-829104",
+      riskStatus: "GREEN",
     },
   });
 
+  // Worker 2: GREEN (Stable)
   const worker2 = await prisma.worker.upsert({
     where: { portableHealthId: "KL-MH-654219" },
     update: {
@@ -110,6 +114,7 @@ async function main() {
       phone: "+91 88765 12093",
       homeState: "Assam",
       currentAddress: "Camp Shed 4, Beach Road, Kozhikode, Kerala",
+      riskStatus: "GREEN",
     },
     create: {
       id: "worker-2",
@@ -120,9 +125,11 @@ async function main() {
       homeState: "Assam",
       currentAddress: "Camp Shed 4, Beach Road, Kozhikode, Kerala",
       portableHealthId: "KL-MH-654219",
+      riskStatus: "GREEN",
     },
   });
 
+  // Worker 3: YELLOW (Needs Monitoring - Heat exhaustion recovery)
   const worker3 = await prisma.worker.upsert({
     where: { portableHealthId: "KL-MH-338102" },
     update: {
@@ -132,6 +139,7 @@ async function main() {
       phone: "+91 94371 88201",
       homeState: "Odisha",
       currentAddress: "Kanjikode Industrial Area, Palakkad, Kerala",
+      riskStatus: "YELLOW",
     },
     create: {
       id: "worker-3",
@@ -142,9 +150,11 @@ async function main() {
       homeState: "Odisha",
       currentAddress: "Kanjikode Industrial Area, Palakkad, Kerala",
       portableHealthId: "KL-MH-338102",
+      riskStatus: "YELLOW",
     },
   });
 
+  // Worker 4: RED (Urgent - Chronic dust exposure & symptomatic wheezing requiring clinic attention)
   const worker4 = await prisma.worker.upsert({
     where: { portableHealthId: "KL-MH-491084" },
     update: {
@@ -154,6 +164,7 @@ async function main() {
       phone: "+91 97482 30194",
       homeState: "West Bengal",
       currentAddress: "Aluva Construction Camp, Ernakulam, Kerala",
+      riskStatus: "RED",
     },
     create: {
       id: "worker-4",
@@ -164,6 +175,7 @@ async function main() {
       homeState: "West Bengal",
       currentAddress: "Aluva Construction Camp, Ernakulam, Kerala",
       portableHealthId: "KL-MH-491084",
+      riskStatus: "RED",
     },
   });
 
@@ -198,7 +210,7 @@ async function main() {
       workerId: worker3.id,
       facilityId: palakkadPHC.id,
       date: new Date("2026-08-01"),
-      notes: "Presented with dizziness and dehydration after high-heat foundry shift. Administered IV fluids and rest.",
+      notes: "Presented with dizziness and dehydration after high-heat foundry shift. Administered IV fluids and rest. Follow-up hydration monitoring advised.",
     },
   });
 
@@ -208,14 +220,14 @@ async function main() {
       workerId: worker4.id,
       facilityId: mobileUnit.id,
       date: new Date("2026-08-10"),
-      notes: "Mobile medical unit field screening at Aluva metro worksite. General physical examination satisfactory.",
+      notes: "URGENT TRIAGE: Worker presents with severe acute wheezing and occupational cement dust irritation. Nebulization administered. Immediate specialist consultation requested.",
     },
   });
 
   // 5. Create Diagnostic Screenings & Vaccinations
   await prisma.screening.createMany({
     data: [
-      // Worker 1
+      // Worker 1 (GREEN)
       {
         workerId: worker1.id,
         facilityId: mobileUnit.id,
@@ -252,7 +264,7 @@ async function main() {
         date: new Date("2026-06-15"),
       },
 
-      // Worker 2
+      // Worker 2 (GREEN)
       {
         workerId: worker2.id,
         facilityId: kozhikodeGH.id,
@@ -282,19 +294,19 @@ async function main() {
         date: new Date("2026-01-14"),
       },
 
-      // Worker 3
+      // Worker 3 (YELLOW)
       {
         workerId: worker3.id,
         facilityId: palakkadPHC.id,
         type: "Random Blood Sugar (Diabetes)",
-        result: "104 mg/dL (Normal)",
+        result: "135 mg/dL (Borderline / Monitor)",
         date: new Date("2026-08-01"),
       },
       {
         workerId: worker3.id,
         facilityId: palakkadPHC.id,
         type: "Heat Strain & Core Electrolyte Panel",
-        result: "Mild Dehydration (Recovered)",
+        result: "Moderate Dehydration (Under Monitoring)",
         date: new Date("2026-08-01"),
       },
       {
@@ -305,19 +317,19 @@ async function main() {
         date: new Date("2026-08-01"),
       },
 
-      // Worker 4
+      // Worker 4 (RED)
       {
         workerId: worker4.id,
         facilityId: mobileUnit.id,
-        type: "Malaria Rapid Diagnostic Test (RDT)",
-        result: "Negative (Clear)",
+        type: "Occupational Spirometry",
+        result: "Restricted Airway (FEV1 52% - Urgent Follow-up)",
         date: new Date("2026-08-10"),
       },
       {
         workerId: worker4.id,
         facilityId: mobileUnit.id,
-        type: "Tuberculosis Screening (Chest X-Ray / Sputum)",
-        result: "Clear / Normal",
+        type: "Tuberculosis Sputum GeneXpert",
+        result: "Under Urgent Microbiological Evaluation",
         date: new Date("2026-08-10"),
       },
       {
@@ -357,14 +369,14 @@ async function main() {
       {
         workerId: worker4.id,
         visitId: visit4.id,
-        description: "Preventive eye care and lubrication for concrete dust exposure",
-        medication: "Carboxymethylcellulose 0.5% eye drops TDS x 7 days",
+        description: "URGENT BRONCHIAL THERAPY: Acute bronchospasm management & corticosteroid inhaler",
+        medication: "Budesonide 400mcg + Formoterol 6mcg Inhaler 2 puffs BD, Oral Prednisolone 20mg x 5 days",
         date: new Date("2026-08-10"),
       },
     ],
   });
 
-  console.log("Database seeded successfully with rich Health Passport data!");
+  console.log("Database seeded successfully with Green, Yellow, and Red risk workers!");
 }
 
 main()

@@ -27,6 +27,7 @@ import {
   Award,
 } from "lucide-react";
 import { KeralaMotif, KeralaPalmIcon } from "@/components/KeralaMotif";
+import { RiskStatusBadge } from "@/components/RiskStatusBadge";
 
 interface HealthPassportProps {
   workers: any[];
@@ -88,6 +89,13 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
     .substring(0, 2)
     .toUpperCase();
 
+  const getRiskDotColor = (riskStatus?: string) => {
+    const s = (riskStatus || "GREEN").toUpperCase();
+    if (s === "RED") return "bg-red-500 ring-2 ring-red-400";
+    if (s === "YELLOW") return "bg-amber-400 ring-2 ring-amber-300";
+    return "bg-emerald-400 ring-2 ring-emerald-300";
+  };
+
   return (
     <div className="w-full space-y-4">
       {/* Worker Selector Bar */}
@@ -97,7 +105,7 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
           <span>{t("switchWorker")}</span>
         </div>
 
-        {/* Worker Switcher Chips */}
+        {/* Worker Switcher Chips with Triage Status Indicators */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
           {workers.map((worker) => {
             const isSelected = worker.id === selectedWorker.id;
@@ -106,16 +114,16 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
                 key={worker.id}
                 type="button"
                 onClick={() => setSelectedWorkerId(worker.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 shadow-2xs ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 shadow-2xs ${
                   isSelected
                     ? "bg-gradient-to-r from-kerala-green-900 to-kerala-green-800 text-white ring-2 ring-kerala-gold-400"
                     : "bg-white text-slate-700 hover:bg-kerala-coir-100/80 border border-kerala-coir-200"
                 }`}
               >
                 <span
-                  className={`w-2 h-2 rounded-full ${
-                    isSelected ? "bg-kerala-gold-400" : "bg-slate-300"
-                  }`}
+                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${getRiskDotColor(
+                    worker.riskStatus
+                  )}`}
                 />
                 <span>{worker.name}</span>
                 <span
@@ -172,7 +180,7 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
           </div>
         </div>
 
-        {/* Passport Identity Deck (Photo, Name, ID, QR, Demographics) */}
+        {/* Passport Identity Deck (Photo, Name, ID, QR, Triage Risk Badge) */}
         <div className="relative z-10 p-5 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center border-b border-white/10">
           {/* Worker Photo & Identifiers (Cols 1-7) */}
           <div className="lg:col-span-7 flex flex-col sm:flex-row items-start sm:items-center gap-5">
@@ -268,25 +276,19 @@ export function HealthPassportCenterpiece({ workers }: HealthPassportProps) {
             </div>
           </div>
 
-          {/* QR Code Verification & Occupational Risk Badge (Cols 8-12) */}
+          {/* Color-Coded Triage Risk Badge & QR Code Seal (Cols 8-12) */}
           <div className="lg:col-span-5 flex flex-col sm:flex-row lg:flex-col items-center sm:items-end justify-center gap-4 border-t lg:border-t-0 lg:border-l border-white/10 pt-4 lg:pt-0 lg:pl-6">
-            {/* Risk Badge */}
-            <div className="w-full flex items-center justify-between gap-3 p-3 rounded-2xl bg-black/40 border border-emerald-500/40">
-              <div className="flex items-center gap-2">
-                <span className="relative flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
-                </span>
-                <div>
-                  <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                    {t("riskStatus")}
-                  </p>
-                  <p className="text-xs font-extrabold text-emerald-300">
-                    {t("riskLow")}
-                  </p>
-                </div>
-              </div>
-              <ShieldCheck className="w-5 h-5 text-emerald-400 shrink-0" />
+            {/* Prominent Color-Coded Triage Badge */}
+            <div className="w-full flex flex-col gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                {t("riskStatus")}
+              </span>
+              <RiskStatusBadge
+                status={selectedWorker.riskStatus || "GREEN"}
+                variant="dark"
+                size="lg"
+                className="w-full justify-center text-center py-2.5 shadow-md"
+              />
             </div>
 
             {/* Live QR Seal */}

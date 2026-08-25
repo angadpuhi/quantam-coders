@@ -44,7 +44,7 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
   const [currentAddress, setCurrentAddress] = useState("");
   const [customHealthId, setCustomHealthId] = useState("");
   const [autoGenerateId, setAutoGenerateId] = useState(true);
-
+  const [riskStatus, setRiskStatus] = useState("GREEN");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdWorker, setCreatedWorker] = useState<any | null>(null);
@@ -63,6 +63,7 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
         phone: phone.trim() || null,
         currentAddress: currentAddress.trim() || null,
         dob: dob ? dob : null,
+        riskStatus,
       };
 
       if (!autoGenerateId && customHealthId.trim()) {
@@ -384,6 +385,71 @@ export function WorkerRegistrationForm({ onWorkerCreated }: { onWorkerCreated?: 
               />
             </div>
           )}
+        </div>
+
+        {/* Initial Triage Risk Level */}
+        <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+          <label className="block text-xs font-bold text-slate-800 mb-2">
+            Initial Health & Occupational Risk Status (Triage)
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <label
+              className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition text-xs font-bold ${
+                riskStatus === "GREEN"
+                  ? "bg-emerald-50 border-emerald-500 text-emerald-900 ring-2 ring-emerald-300"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              <input
+                type="radio"
+                name="riskStatus"
+                value="GREEN"
+                checked={riskStatus === "GREEN"}
+                onChange={(e) => setRiskStatus(e.target.value)}
+                className="text-emerald-600 focus:ring-emerald-500"
+              />
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <span>Green • Stable</span>
+            </label>
+
+            <label
+              className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition text-xs font-bold ${
+                riskStatus === "YELLOW"
+                  ? "bg-amber-50 border-amber-500 text-amber-900 ring-2 ring-amber-300"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              <input
+                type="radio"
+                name="riskStatus"
+                value="YELLOW"
+                checked={riskStatus === "YELLOW"}
+                onChange={(e) => setRiskStatus(e.target.value)}
+                className="text-amber-600 focus:ring-amber-500"
+              />
+              <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+              <span>Yellow • Monitor</span>
+            </label>
+
+            <label
+              className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition text-xs font-bold ${
+                riskStatus === "RED"
+                  ? "bg-red-50 border-red-500 text-red-900 ring-2 ring-red-300"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
+              }`}
+            >
+              <input
+                type="radio"
+                name="riskStatus"
+                value="RED"
+                checked={riskStatus === "RED"}
+                onChange={(e) => setRiskStatus(e.target.value)}
+                className="text-red-600 focus:ring-red-500"
+              />
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
+              <span>Red • Urgent</span>
+            </label>
+          </div>
         </div>
 
         {/* Submit Button */}

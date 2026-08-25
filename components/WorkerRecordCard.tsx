@@ -5,6 +5,7 @@ import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { User, Phone, MapPin, Building, FileText, Activity, Stethoscope, Pill, ArrowRight } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import { RiskStatusBadge } from "@/components/RiskStatusBadge";
 
 export interface WorkerWithDetails {
   id: string;
@@ -15,6 +16,7 @@ export interface WorkerWithDetails {
   homeState: string;
   currentAddress?: string | null;
   portableHealthId: string;
+  riskStatus?: string | null;
   visits?: Array<{
     id: string;
     date: Date | string;
@@ -54,14 +56,16 @@ export function WorkerRecordCard({ worker }: { worker: WorkerWithDetails }) {
   return (
     <div className="bg-white rounded-houseboat border border-kerala-coir-200 overflow-hidden shadow-xs hover:border-kerala-green-400 transition-all">
       <div className="p-5 sm:p-6">
-        {/* Header with Portable Health ID and Name */}
+        {/* Header with Name, Health ID, and Triage Risk Badge */}
         <div className="flex flex-wrap items-start justify-between gap-2 border-b border-kerala-coir-100 pb-3.5">
-          <div>
-            <div className="flex items-center gap-2">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
               <h3 className="text-base font-bold text-slate-900">{worker.name}</h3>
               <span className="text-xs bg-kerala-green-50 text-kerala-green-900 font-mono font-bold px-2.5 py-0.5 rounded-full border border-kerala-green-200">
                 {worker.portableHealthId}
               </span>
+              {/* Color-Coded Triage Risk Badge */}
+              <RiskStatusBadge status={worker.riskStatus || "GREEN"} size="sm" />
             </div>
             <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
               <span>{worker.gender}</span>
