@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Link, useRouter } from "@/i18n/routing";
+import { Link, useRouter, usePathname } from "@/i18n/routing";
 import {
   Terminal,
   Mic,
@@ -65,12 +65,18 @@ export function SahaayakTerminal() {
   const t = useTranslations("sahaayak");
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputVal, setInputVal] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<TerminalMessage[]>([]);
+
+  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+  if (isLoginPage) {
+    return null;
+  }
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<any | null>(null);

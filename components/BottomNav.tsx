@@ -22,6 +22,11 @@ export function BottomNav() {
     return pathname.startsWith(path);
   };
 
+  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+  if (isLoginPage) {
+    return null;
+  }
+
   const navItems = [
     { href: "/", label: t("home"), icon: Home },
     { href: "/quick-actions", label: t("quickActions"), icon: Zap },

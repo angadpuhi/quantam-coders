@@ -48,6 +48,11 @@ export function Navbar() {
     return pathname.startsWith(path);
   };
 
+  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+  if (isLoginPage) {
+    return null;
+  }
+
   return (
     <>
       {/* Top Utility Bar matching ArogyaRekha design */}
