@@ -156,17 +156,28 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* DPDP Act 2023 Compliance & Anonymization Notice */}
-      <div className="p-4 rounded-2xl bg-emerald-950/70 border-2 border-emerald-500/40 text-emerald-200 flex items-start gap-3 shadow-xs">
-        <Lock className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-        <div className="space-y-0.5 text-xs">
-          <p className="font-extrabold text-emerald-300 uppercase tracking-wider">
-            DPDP Act 2023 Compliant • Aggregated &amp; Anonymized Telemetry Only
-          </p>
-          <p className="text-emerald-100/90 leading-relaxed">
-            In compliance with patient privacy and the Digital Personal Data Protection Act, individual worker identities, portable health IDs, and clinical notes are strictly restricted to treating Healthcare Providers. Admin views display epidemiological counts and district distributions only.
-          </p>
+      {/* DPDP Act 2023 Compliance & Anonymization Notice + Database Inspector CTA */}
+      <div className="p-4 rounded-2xl bg-emerald-950/70 border-2 border-emerald-500/40 text-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-start gap-3">
+          <Lock className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+          <div className="space-y-0.5 text-xs">
+            <p className="font-extrabold text-emerald-300 uppercase tracking-wider">
+              DPDP Act 2023 Compliant • Aggregated &amp; Anonymized Telemetry Only
+            </p>
+            <p className="text-emerald-100/90 leading-relaxed">
+              In compliance with patient privacy, individual worker identities and clinical notes are restricted to treating Healthcare Providers. Admin views display epidemiological aggregates only.
+            </p>
+          </div>
         </div>
+
+        <Link
+          href="/admin/database"
+          className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 hover:text-white text-xs font-mono font-bold transition shadow-xs shrink-0 self-start sm:self-auto min-h-[44px]"
+        >
+          <FileCheck2 className="w-4 h-4 text-emerald-400" />
+          <span>Database View (Admin)</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
       </div>
 
       {/* 4 PRIMARY AGGREGATE STAT CARDS */}
