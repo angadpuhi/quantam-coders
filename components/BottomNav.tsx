@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
+import { useSession } from "next-auth/react";
 import {
   User,
   Zap,
@@ -15,15 +16,7 @@ import {
 export function BottomNav() {
   const t = useTranslations("nav");
   const pathname = usePathname();
-  const [workerHealthId, setWorkerHealthId] = useState<string | null>(null);
-
-  // Read stored worker Health ID from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedId = localStorage.getItem("workerHealthId");
-      if (storedId) setWorkerHealthId(storedId);
-    }
-  }, [pathname]);
+  const { data: session } = useSession();
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -37,16 +30,18 @@ export function BottomNav() {
     return null;
   }
 
-  // Detect worker mode
-  const isWorkerMode = pathname.startsWith("/workers/");
+  // Detect worker role from authentic session
+  const userRole = (session?.user as any)?.role;
+  const isWorker = userRole === "WORKER";
+  const sessionHealthId = (session?.user as any)?.portableHealthId;
 
   // Worker's passport link
-  const workerPassportHref = workerHealthId
-    ? `/workers/${encodeURIComponent(workerHealthId)}`
+  const workerPassportHref = sessionHealthId
+    ? `/workers/${encodeURIComponent(sessionHealthId)}`
     : pathname;
 
   // Role-aware nav items
-  const navItems = isWorkerMode
+  const navItems = isWorker
     ? [
         { href: workerPassportHref, label: "My Passport", icon: User },
         { href: "/quick-actions", label: t("quickActions"), icon: Zap },

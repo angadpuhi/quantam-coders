@@ -14,7 +14,9 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   providers: [
+    // 1. Staff & Admin Credentials Provider (Email & Password)
     CredentialsProvider({
+      id: "credentials",
       name: "Kerala Health Portal Credentials",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "provider@keralahealth.gov.in" },
@@ -51,6 +53,68 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
+
+    // 2. Worker Credentials Provider (Portable Health ID or Phone + 4-digit Security PIN)
+    CredentialsProvider({
+      id: "worker-credentials",
+      name: "Kerala Athidhi Swasthya Worker Authentication",
+      credentials: {
+        portableHealthId: { label: "Portable Health ID or Phone", type: "text" },
+        pin: { label: "Security PIN", type: "password" },
+      },
+      async authorize(credentials) {
+        const query = credentials?.portableHealthId?.trim();
+        const pin = credentials?.pin?.trim();
+
+        if (!query) {
+          throw new Error("Please enter your Portable Health ID or registered phone number.");
+        }
+
+        if (!pin) {
+          throw new Error("Please enter your 4-digit Security PIN.");
+        }
+
+        // Search for worker by exact portableHealthId or phone
+        const worker = await prisma.worker.findFirst({
+          where: {
+            OR: [
+              { portableHealthId: query },
+              { portableHealthId: query.toUpperCase() },
+              { phone: query },
+              { phone: query.replace(/\s+/g, "") },
+            ],
+          },
+        });
+
+        if (!worker) {
+          throw new Error(`No worker found matching "${query}". Please check your Health ID.`);
+        }
+
+        // Verify PIN: Default/demo PIN is "1234", or last 4 digits of phone if configured
+        const validPins = ["1234"];
+        if (worker.phone) {
+          const digits = worker.phone.replace(/\D/g, "");
+          if (digits.length >= 4) {
+            validPins.push(digits.slice(-4));
+          }
+        }
+
+        if (!validPins.includes(pin)) {
+          throw new Error("Invalid Security PIN. (Demo default PIN is 1234)");
+        }
+
+        return {
+          id: worker.id,
+          name: worker.name,
+          email: `${worker.portableHealthId.toLowerCase()}@worker.keralahealth.gov.in`,
+          role: "WORKER",
+          workerId: worker.id,
+          portableHealthId: worker.portableHealthId,
+          facilityId: null,
+          facilityName: null,
+        };
+      },
+    }),
   ],
   callbacks: {
     async jwt({ token, user }) {
@@ -59,6 +123,8 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role === "STAFF" ? "PROVIDER" : user.role;
         token.facilityId = user.facilityId;
         token.facilityName = user.facilityName;
+        token.workerId = (user as any).workerId || null;
+        token.portableHealthId = (user as any).portableHealthId || null;
       }
       return token;
     },
@@ -68,6 +134,8 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role === "STAFF" ? "PROVIDER" : (token.role || "PROVIDER");
         session.user.facilityId = token.facilityId;
         session.user.facilityName = token.facilityName;
+        (session.user as any).workerId = token.workerId || null;
+        (session.user as any).portableHealthId = token.portableHealthId || null;
       }
       return session;
     },
@@ -89,7 +157,7 @@ export async function requireAuth(allowedRoles: string[] = ["PROVIDER", "ADMIN"]
     return NextResponse.json(
       {
         success: false,
-        error: "Unauthorized. Healthcare Provider or Admin login is required for this action.",
+        error: "Unauthorized. Login is required for this action.",
       },
       { status: 401 }
     );

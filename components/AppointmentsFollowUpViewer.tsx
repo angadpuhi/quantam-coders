@@ -92,46 +92,48 @@ export function AppointmentsFollowUpViewer({ workers, allVisits }: AppointmentsV
         </div>
       </div>
 
-      {/* Worker Selector Bar (Mobile Single-Row Scroll) */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-kerala-coir-50 border border-kerala-coir-300 rounded-2xl p-3 shadow-2xs">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-          <User className="w-4 h-4 text-kerala-green-800" />
-          <span>Worker Schedule:</span>
-        </div>
+      {/* Worker Selector Bar (Mobile Single-Row Scroll) — only shown when multiple workers are present (clinical/staff view) */}
+      {workers.length > 1 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-kerala-coir-50 border border-kerala-coir-300 rounded-2xl p-3 shadow-2xs">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
+            <User className="w-4 h-4 text-kerala-green-800" />
+            <span>Worker Schedule:</span>
+          </div>
 
-        {/* Worker Switcher Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-          {workers.map((worker) => {
-            const isSelected = worker.id === selectedWorker?.id;
-            return (
-              <button
-                key={worker.id}
-                type="button"
-                onClick={() => setSelectedWorkerId(worker.id)}
-                className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 shadow-2xs min-h-[40px] ${
-                  isSelected
-                    ? "bg-gradient-to-r from-kerala-green-900 to-kerala-green-800 text-white ring-2 ring-kerala-gold-400"
-                    : "bg-white text-slate-700 hover:bg-kerala-coir-100/80 border border-kerala-coir-200"
-                }`}
-              >
-                <span
-                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${getRiskDotColor(
-                    worker.riskStatus
-                  )}`}
-                />
-                <span>{worker.name}</span>
-                <span
-                  className={`font-mono text-[10px] ${
-                    isSelected ? "text-kerala-gold-200" : "text-slate-400"
+          {/* Worker Switcher Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {workers.map((worker) => {
+              const isSelected = worker.id === selectedWorker?.id;
+              return (
+                <button
+                  key={worker.id}
+                  type="button"
+                  onClick={() => setSelectedWorkerId(worker.id)}
+                  className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-2 shadow-2xs min-h-[40px] ${
+                    isSelected
+                      ? "bg-gradient-to-r from-kerala-green-900 to-kerala-green-800 text-white ring-2 ring-kerala-gold-400"
+                      : "bg-white text-slate-700 hover:bg-kerala-coir-100/80 border border-kerala-coir-200"
                   }`}
                 >
-                  ({worker.portableHealthId.substring(6)})
-                </span>
-              </button>
-            );
-          })}
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full shrink-0 ${getRiskDotColor(
+                      worker.riskStatus
+                    )}`}
+                  />
+                  <span>{worker.name}</span>
+                  <span
+                    className={`font-mono text-[10px] ${
+                      isSelected ? "text-kerala-gold-200" : "text-slate-400"
+                    }`}
+                  >
+                    ({worker.portableHealthId.substring(6)})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Worker Snapshot Banner */}
       {selectedWorker && (

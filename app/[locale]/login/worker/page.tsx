@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
+import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/routing";
@@ -45,8 +46,15 @@ function WorkerLoginForm() {
   const handleWorkerSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = workerHealthId.trim();
+    const pin = workerPin.trim();
+
     if (!query) {
       setError("Please enter your Portable Health ID or registered phone number.");
+      return;
+    }
+
+    if (!pin) {
+      setError("Please enter your 4-digit Security PIN.");
       return;
     }
 
@@ -54,38 +62,56 @@ function WorkerLoginForm() {
     setError(null);
 
     try {
-      const res = await fetch(`/api/workers/${encodeURIComponent(query)}`);
-      const json = await res.json();
+      // Authenticate via authentic NextAuth worker session with server-side PIN verification
+      const result = await signIn("worker-credentials", {
+        redirect: false,
+        portableHealthId: query,
+        pin,
+      });
 
-      if (res.ok && json.success && json.data?.worker) {
-        const cleanId = json.data.worker.portableHealthId;
-        if (typeof window !== "undefined") localStorage.setItem("workerHealthId", cleanId);
-        router.push(callbackUrl || `/workers/${encodeURIComponent(cleanId)}`);
-        router.refresh();
-      } else {
-        const listRes = await fetch(`/api/workers?q=${encodeURIComponent(query)}`);
-        const listJson = await listRes.json();
-        if (listRes.ok && listJson.success && listJson.data?.length > 0) {
-          const cleanId = listJson.data[0].portableHealthId;
-          if (typeof window !== "undefined") localStorage.setItem("workerHealthId", cleanId);
-          router.push(callbackUrl || `/workers/${encodeURIComponent(cleanId)}`);
-          router.refresh();
-        } else {
-          setError(`No worker record found for "${query}". Please check the Health ID or register at a health camp.`);
-        }
+      if (result?.error) {
+        setError(result.error);
+        setLoading(false);
+        return;
       }
+
+      // Read clean worker ID and redirect to their personal passport
+      const cleanId = query.toUpperCase().startsWith("KL-MH-") ? query.toUpperCase() : query;
+      const targetUrl = callbackUrl || `/workers/${encodeURIComponent(cleanId)}`;
+      router.push(targetUrl);
+      router.refresh();
     } catch (err: any) {
-      setError(err?.message || "Failed to verify worker Health ID.");
-    } finally {
+      setError(err?.message || "Failed to authenticate worker.");
       setLoading(false);
     }
   };
 
-  const handleQrScanned = (scannedId: string) => {
+  const handleQrScanned = async (scannedId: string) => {
     setShowQrScanner(false);
     setWorkerHealthId(scannedId);
-    if (typeof window !== "undefined") localStorage.setItem("workerHealthId", scannedId);
-    router.push(`/workers/${encodeURIComponent(scannedId)}`);
+    setLoading(true);
+    setError(null);
+
+    // Auto-attempt sign in with demo PIN 1234 on QR scan
+    try {
+      const result = await signIn("worker-credentials", {
+        redirect: false,
+        portableHealthId: scannedId,
+        pin: "1234",
+      });
+
+      if (result?.error) {
+        setError(`Scanned Card ${scannedId}: ${result.error}. Please verify your PIN.`);
+        setLoading(false);
+        return;
+      }
+
+      router.push(callbackUrl || `/workers/${encodeURIComponent(scannedId)}`);
+      router.refresh();
+    } catch (err: any) {
+      setError(err?.message || "Failed to sign in with scanned QR card.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -156,7 +182,7 @@ function WorkerLoginForm() {
 
           {/* Error Alert */}
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs flex items-start gap-2">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-800 rounded-xl text-xs flex items-start gap-2 animate-in fade-in">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <span className="leading-snug">{error}</span>
             </div>
@@ -167,7 +193,7 @@ function WorkerLoginForm() {
             <form onSubmit={handleWorkerSubmit} className="space-y-3.5">
               <div>
                 <label className="block text-xs font-bold text-slate-800 mb-1">
-                  Portable Health ID or Phone Number
+                  Portable Health ID or Registered Phone
                 </label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -182,14 +208,14 @@ function WorkerLoginForm() {
                 </div>
                 <p className="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                  <span>Password-free access. Enter your Health ID or registered phone.</span>
+                  <span>Verified session tied to your Kerala Health ID.</span>
                 </p>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1">
                   <label className="block text-xs font-bold text-slate-800">
-                    Security PIN / OTP
+                    4-Digit Security PIN
                   </label>
                   <span className="text-[10px] text-slate-400 font-medium">
                     Demo PIN: 1234
@@ -199,6 +225,7 @@ function WorkerLoginForm() {
                   <KeyRound className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
                     type="password"
+                    required
                     maxLength={6}
                     value={workerPin}
                     onChange={(e) => setWorkerPin(e.target.value)}
@@ -215,7 +242,7 @@ function WorkerLoginForm() {
                   className="w-full bg-[#0f3e17] hover:bg-[#0c2f10] text-white font-bold py-2.5 rounded-xl text-xs shadow-xs transition flex items-center justify-center gap-1.5 min-h-[42px]"
                 >
                   {loading ? (
-                    <span>Opening...</span>
+                    <span>Authenticating PIN...</span>
                   ) : (
                     <>
                       <span>Open Passport</span>
@@ -238,7 +265,7 @@ function WorkerLoginForm() {
             {/* Quick Demo Worker Profile Selectors */}
             <div className="pt-3 border-t border-kerala-coir-200">
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 text-center">
-                Quick Demo Worker Profiles
+                Quick Demo Worker Profiles (PIN: 1234)
               </p>
               <div className="flex flex-wrap gap-1.5 justify-center">
                 <button
@@ -249,7 +276,7 @@ function WorkerLoginForm() {
                   }}
                   className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-[10px] font-medium border border-slate-200 transition"
                 >
-                  Bikash (KL-MH-829104)
+                  Debabrata (KL-MH-829104)
                 </button>
                 <button
                   type="button"

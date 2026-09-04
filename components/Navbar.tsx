@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useSession, signOut } from "next-auth/react";
@@ -30,26 +30,21 @@ export function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [workerHealthId, setWorkerHealthId] = useState<string | null>(null);
 
   const languages = [
     { code: "en", label: "English" },
     { code: "ml", label: "മലയാളം" },
     { code: "hi", label: "हिन्दी" },
     { code: "bn", label: "বাংলা" },
-    { code: "or", label: "ଓଡ଼ி��"},
+    { code: "or", label: "ଓଡ଼ିଆ" },
   ];
 
-  // Detect worker mode: worker is browsing their own passport
-  const isWorkerMode = pathname.startsWith("/workers/");
-
-  // Read stored worker Health ID from localStorage
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedId = localStorage.getItem("workerHealthId");
-      if (storedId) setWorkerHealthId(storedId);
-    }
-  }, [pathname]);
+  // Determine user role and identifiers directly from authentic NextAuth session
+  const userRole = (session?.user as any)?.role;
+  const isWorker = userRole === "WORKER";
+  const isAdmin = userRole === "ADMIN";
+  const isProvider = userRole === "PROVIDER" || userRole === "STAFF";
+  const sessionHealthId = (session?.user as any)?.portableHealthId;
 
   const handleLanguageChange = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale });
@@ -68,26 +63,14 @@ export function Navbar() {
     return null;
   }
 
-  // Determine the user role for nav filtering
-  const sessionRole = (session?.user as any)?.role;
-  const isAdmin = sessionRole === "ADMIN";
-  const isProvider = sessionRole === "PROVIDER" || sessionRole === "STAFF";
-
-  // Build the worker's passport link
-  const workerPassportHref = workerHealthId
-    ? `/workers/${encodeURIComponent(workerHealthId)}`
-    : pathname; // fallback to current path if on /workers/xxx
-
-  const handleWorkerSignOut = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("workerHealthId");
-    }
-    router.push("/login");
-  };
+  // Worker's personal passport link
+  const workerPassportHref = sessionHealthId
+    ? `/workers/${encodeURIComponent(sessionHealthId)}`
+    : pathname;
 
   return (
     <>
-      {/* Top Utility Bar matching ArogyaRekha design */}
+      {/* Top Utility Bar */}
       <div className="bg-[#0f3e17] text-[#fffefc] text-xs border-b border-[#0c2f10]/40">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-2 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Choose language">
@@ -125,7 +108,7 @@ export function Navbar() {
       <nav className="bg-[#fffefc]/95 backdrop-blur-md border-b border-[#efeeeb] sticky top-0 z-40">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-8">
           <div className="flex items-center justify-between h-[72px]">
-            {/* Logo — links to login (since / redirects to /login) */}
+            {/* Logo */}
             <Link
               href="/login"
               className="flex items-center gap-2.5 group focus:outline-hidden"
@@ -148,8 +131,8 @@ export function Navbar() {
 
             {/* Desktop Navigation Links — ROLE AWARE */}
             <div className="hidden lg:flex items-center space-x-7 text-[14px] text-[#222222]">
-              {isWorkerMode ? (
-                /* WORKER NAV: Only passport-relevant links */
+              {isWorker ? (
+                /* WORKER AUTHENTIC NAV: Strict passport scope */
                 <>
                   <Link
                     href={workerPassportHref as any}
@@ -186,7 +169,7 @@ export function Navbar() {
                   </Link>
                 </>
               ) : (
-                /* STAFF / ADMIN NAV: Full navigation */
+                /* STAFF / ADMIN NAV: Full clinical management */
                 <>
                   <Link
                     href="/quick-actions"
@@ -236,7 +219,7 @@ export function Navbar() {
                   >
                     {t("registerSearch")}
                   </Link>
-                  {(isAdmin || (!isProvider && !isWorkerMode)) && (
+                  {isAdmin && (
                     <Link
                       href="/admin"
                       className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
@@ -252,32 +235,22 @@ export function Navbar() {
 
             {/* Right CTAs */}
             <div className="flex items-center gap-3">
-              {isWorkerMode ? (
-                /* Worker: Back to Login button */
-                <button
-                  type="button"
-                  onClick={handleWorkerSignOut}
-                  className="inline-flex items-center gap-1.5 border border-[#0f3e17] text-[#0f3e17] hover:bg-[#e1f4df]/60 font-medium px-3.5 py-2 rounded-card text-xs transition"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </button>
-              ) : status === "authenticated" && session ? (
+              {status === "authenticated" && session ? (
                 <div className="flex items-center gap-2">
                   <div className="hidden sm:flex flex-col text-right">
                     <span className="text-xs font-semibold text-[#0f3e17] leading-tight">
-                      {session.user?.name || "Healthcare Provider"}
+                      {session.user?.name || (isWorker ? "Worker" : "Staff")}
                     </span>
                     <span className="text-[10px] text-slate-500 flex items-center justify-end gap-1">
                       <Shield className="w-2.5 h-2.5 text-[#0f3e17]" />
-                      {(session.user as any)?.role === "PROVIDER" ? "PROVIDER" : ((session.user as any)?.role || "PROVIDER")}
+                      {userRole}
                     </span>
                   </div>
                   <button
                     type="button"
                     onClick={() => signOut({ callbackUrl: "/login" })}
                     title={t("signOut")}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-red-700 bg-slate-100 hover:bg-red-50 p-2 rounded-card border border-[#efeeeb] transition"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-red-700 bg-slate-100 hover:bg-red-50 px-3 py-2 rounded-card border border-[#efeeeb] transition"
                   >
                     <LogOut className="w-4 h-4 text-slate-600 hover:text-red-600" />
                     <span className="hidden md:inline">{t("signOut")}</span>
@@ -289,7 +262,7 @@ export function Navbar() {
                   className="hidden sm:inline-flex items-center gap-1.5 border border-[#0f3e17] text-[#0f3e17] hover:bg-[#e1f4df]/60 font-medium px-3.5 py-2 rounded-card text-xs transition"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>{t("staffLogin")}</span>
+                  <span>Portal Login</span>
                 </Link>
               )}
 
@@ -310,7 +283,7 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-[#efeeeb] bg-[#fffefc] px-4 pt-3 pb-6 space-y-3 shadow-lg">
             <div className="grid grid-cols-2 gap-2 text-xs">
-              {isWorkerMode ? (
+              {isWorker ? (
                 /* WORKER MOBILE NAV */
                 <>
                   <Link
@@ -397,7 +370,7 @@ export function Navbar() {
                     <Search className="w-3.5 h-3.5" />
                     <span>{t("registerSearch")}</span>
                   </Link>
-                  {(isAdmin || (!isProvider && !isWorkerMode)) && (
+                  {isAdmin && (
                     <Link
                       href="/admin"
                       onClick={() => setMobileMenuOpen(false)}
@@ -412,34 +385,25 @@ export function Navbar() {
             </div>
 
             <div className="pt-2 border-t border-[#efeeeb] flex gap-2">
-              {isWorkerMode ? (
+              {status === "authenticated" ? (
                 <button
                   type="button"
                   onClick={() => {
                     setMobileMenuOpen(false);
-                    handleWorkerSignOut();
+                    signOut({ callbackUrl: "/login" });
                   }}
-                  className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
+                  className="flex-1 text-center py-2 rounded-card border border-red-300 text-red-700 bg-red-50 text-xs font-semibold"
                 >
-                  Sign Out
+                  {t("signOut")}
                 </button>
               ) : (
-                <>
-                  <Link
-                    href="/login"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
-                  >
-                    {t("staffLogin")}
-                  </Link>
-                  <Link
-                    href="/registry"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 text-center py-2 rounded-card bg-[#0f3e17] text-[#fffefc] text-xs font-semibold"
-                  >
-                    Get Health ID →
-                  </Link>
-                </>
+                <Link
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
+                >
+                  Portal Login
+                </Link>
               )}
             </div>
           </div>

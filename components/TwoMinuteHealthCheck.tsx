@@ -543,44 +543,58 @@ export function TwoMinuteHealthCheck({ workers }: { workers: WorkerOption[] }) {
               </button>
             </div>
 
-            {/* Worker Selection Dropdown / Selector */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
-              {workers.map((w) => {
-                const isSelected = w.id === selectedWorker?.id;
-                return (
-                  <button
-                    key={w.id}
-                    type="button"
-                    onClick={() => setSelectedWorkerId(w.id)}
-                    className={`p-3 rounded-xl border text-left transition flex items-center justify-between ${
-                      isSelected
-                        ? "bg-kerala-green-900 text-white border-kerala-green-900 ring-2 ring-kerala-gold-400"
-                        : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100"
-                    }`}
-                  >
-                    <div>
-                      <p className="text-xs font-bold truncate">{w.name}</p>
-                      <p
-                        className={`font-mono text-[10px] ${
-                          isSelected ? "text-kerala-gold-300" : "text-slate-500"
-                        }`}
-                      >
-                        {w.portableHealthId}
-                      </p>
-                    </div>
-                    <span
-                      className={`w-2.5 h-2.5 rounded-full ${
-                        w.riskStatus === "RED"
-                          ? "bg-red-500"
-                          : w.riskStatus === "YELLOW"
-                          ? "bg-amber-400"
-                          : "bg-emerald-400"
+            {/* Worker Selection Dropdown / Selector (only shown when multiple workers available) */}
+            {workers.length > 1 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pt-1">
+                {workers.map((w) => {
+                  const isSelected = w.id === selectedWorker?.id;
+                  return (
+                    <button
+                      key={w.id}
+                      type="button"
+                      onClick={() => setSelectedWorkerId(w.id)}
+                      className={`p-3 rounded-xl border text-left transition flex items-center justify-between ${
+                        isSelected
+                          ? "bg-kerala-green-900 text-white border-kerala-green-900 ring-2 ring-kerala-gold-400"
+                          : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100"
                       }`}
-                    />
-                  </button>
-                );
-              })}
-            </div>
+                    >
+                      <div>
+                        <p className="text-xs font-bold truncate">{w.name}</p>
+                        <p
+                          className={`font-mono text-[10px] ${
+                            isSelected ? "text-kerala-gold-300" : "text-slate-500"
+                          }`}
+                        >
+                          {w.portableHealthId}
+                        </p>
+                      </div>
+                      <span
+                        className={`w-2.5 h-2.5 rounded-full ${
+                          w.riskStatus === "RED"
+                            ? "bg-red-500"
+                            : w.riskStatus === "YELLOW"
+                            ? "bg-amber-400"
+                            : "bg-emerald-400"
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : selectedWorker ? (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-extrabold text-emerald-950">{selectedWorker.name}</span>
+                  <span className="ml-2 font-mono text-[11px] font-bold text-emerald-800">
+                    ({selectedWorker.portableHealthId})
+                  </span>
+                </div>
+                <span className="text-[10px] uppercase font-bold bg-white text-emerald-800 px-2 py-0.5 rounded-md border border-emerald-300">
+                  Verified Worker Self-Triage
+                </span>
+              </div>
+            ) : null}
           </div>
 
           {/* Progress Indicator */}

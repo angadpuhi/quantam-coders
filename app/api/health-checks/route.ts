@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getServerAuthSession } from "@/lib/auth";
 
 // POST /api/health-checks - Create a 2-minute health check & auto-update worker riskStatus
 export async function POST(request: Request) {
   try {
+    const session = await getServerAuthSession();
+    const userRole = (session?.user as any)?.role;
+    const sessionWorkerId = (session?.user as any)?.workerId;
+    const sessionHealthId = (session?.user as any)?.portableHealthId;
+
     let body;
     try {
       body = await request.json();
@@ -21,6 +27,23 @@ export async function POST(request: Request) {
         { success: false, error: "Missing required 'workerId' or 'portableHealthId'." },
         { status: 400 }
       );
+    }
+
+    // If logged in as WORKER, enforce self-submission
+    if (userRole === "WORKER") {
+      const isSelf =
+        workerId === sessionWorkerId ||
+        workerId.toUpperCase() === sessionHealthId?.toUpperCase();
+
+      if (!isSelf) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Forbidden. Workers may only submit triage health checks for themselves.",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Find worker by ID or portableHealthId

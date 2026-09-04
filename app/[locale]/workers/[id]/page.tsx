@@ -31,12 +31,17 @@ import { AddClinicalRecordForm } from "@/components/AddClinicalRecordForm";
 import { RiskStatusBadge } from "@/components/RiskStatusBadge";
 import { formatDate } from "@/lib/utils";
 
+import { useSession } from "next-auth/react";
+import { useRouter } from "@/i18n/routing";
+
 export default function WorkerDetailPage({
   params,
 }: {
   params: Promise<{ id: string; locale: string }>;
 }) {
   const t = useTranslations("workerDetail");
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const resolvedParams = use(params);
   const workerIdentifier = resolvedParams.id;
 
@@ -46,6 +51,32 @@ export default function WorkerDetailPage({
   const [showAddForm, setShowAddForm] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showEnlargedQr, setShowEnlargedQr] = useState(false);
+
+  const userRole = (session?.user as any)?.role;
+  const sessionWorkerId = (session?.user as any)?.workerId;
+  const sessionHealthId = (session?.user as any)?.portableHealthId;
+  const isWorker = userRole === "WORKER";
+  const isStaffOrAdmin = userRole === "PROVIDER" || userRole === "ADMIN" || userRole === "STAFF";
+
+  // Check if worker is attempting to view someone else's ID
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push(`/login/worker?callbackUrl=/workers/${encodeURIComponent(workerIdentifier)}`);
+      return;
+    }
+
+    if (status === "authenticated" && isWorker) {
+      const isSelf =
+        workerIdentifier === sessionWorkerId ||
+        workerIdentifier.toUpperCase() === sessionHealthId?.toUpperCase();
+
+      if (!isSelf && sessionHealthId) {
+        // Redirect worker to their own passport
+        router.replace(`/workers/${encodeURIComponent(sessionHealthId)}`);
+        return;
+      }
+    }
+  }, [status, isWorker, workerIdentifier, sessionWorkerId, sessionHealthId, router]);
 
   const fetchWorkerDetails = async () => {
     try {
@@ -137,14 +168,16 @@ export default function WorkerDetailPage({
             <span>Print</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-kerala-green-800 hover:bg-kerala-green-900 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-xl shadow-md transition min-h-[44px]"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>{showAddForm ? t("hideRecordButton") : t("addRecordButton")}</span>
-          </button>
+          {isStaffOrAdmin && (
+            <button
+              type="button"
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 bg-kerala-green-800 hover:bg-kerala-green-900 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-xl shadow-md transition min-h-[44px]"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>{showAddForm ? t("hideRecordButton") : t("addRecordButton")}</span>
+            </button>
+          )}
         </div>
       </div>
 

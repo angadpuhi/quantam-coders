@@ -2,21 +2,11 @@ import React from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
-import { KeralaMotif, KeralaPalmIcon } from "@/components/KeralaMotif";
+import { getServerAuthSession } from "@/lib/auth";
+import { KeralaMotif } from "@/components/KeralaMotif";
 import { TwoMinuteHealthCheck } from "@/components/TwoMinuteHealthCheck";
 import { VoiceInputWidget } from "@/components/VoiceInputWidget";
-import {
-  Mic,
-  HeartPulse,
-  Sparkles,
-  ArrowRight,
-  Activity,
-  PhoneCall,
-  Languages,
-  Stethoscope,
-  ShieldAlert,
-  Clock,
-} from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 export default async function QuickActionsPage({
   params,
@@ -28,18 +18,37 @@ export default async function QuickActionsPage({
   const t = await getTranslations({ locale, namespace: "sections" });
   const tVoice = await getTranslations({ locale, namespace: "voiceInput" });
 
+  const session = await getServerAuthSession();
+  const role = (session?.user as any)?.role;
+  const sessionWorkerId = (session?.user as any)?.workerId;
+
   let workers: any[] = [];
   try {
-    workers = await prisma.worker.findMany({
-      select: {
-        id: true,
-        name: true,
-        portableHealthId: true,
-        riskStatus: true,
-        homeState: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    if (role === "WORKER" && sessionWorkerId) {
+      // Worker only sees themselves in triage
+      workers = await prisma.worker.findMany({
+        where: { id: sessionWorkerId },
+        select: {
+          id: true,
+          name: true,
+          portableHealthId: true,
+          riskStatus: true,
+          homeState: true,
+        },
+      });
+    } else {
+      // Healthcare Provider / Admin / General view
+      workers = await prisma.worker.findMany({
+        select: {
+          id: true,
+          name: true,
+          portableHealthId: true,
+          riskStatus: true,
+          homeState: true,
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    }
   } catch (err) {
     console.error("Error fetching workers for QuickActions:", err);
   }
@@ -98,36 +107,6 @@ export default async function QuickActionsPage({
 
         <TwoMinuteHealthCheck workers={workers} />
       </section>
-
-      {/* 3. Emergency Health Camp & Triage Helpline */}
-      <div className="bg-white border border-kerala-coir-200 rounded-houseboat p-6 sm:p-8 shadow-xs relative overflow-hidden flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center border border-red-200 shrink-0">
-            <PhoneCall className="w-7 h-7" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base sm:text-lg font-bold text-slate-900">
-                DISHA 1056 Health Helpline
-              </h3>
-              <span className="px-2 py-0.5 rounded-md bg-red-600 text-white text-[10px] font-bold">
-                24x7 Free
-              </span>
-            </div>
-            <p className="text-xs text-slate-600 mt-1 max-w-xl">
-              24x7 Kerala Government Tele-health & Medical Assistance. Call toll-free for immediate medical triage, ambulance dispatch, and clinic directions in 5 languages.
-            </p>
-          </div>
-        </div>
-
-        <a
-          href="tel:1056"
-          className="inline-flex items-center gap-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-extrabold px-6 py-3 rounded-xl shadow-md text-xs sm:text-sm transition shrink-0"
-        >
-          <PhoneCall className="w-4 h-4" />
-          <span>Call 1056 Toll-Free</span>
-        </a>
-      </div>
     </div>
   );
 }

@@ -109,8 +109,8 @@ export function SchemesBenefitsViewer({ workers }: SchemesBenefitsViewerProps) {
         </div>
       </div>
 
-      {/* WORKER SELECTOR BAR FOR ELIGIBILITY SIMULATION */}
-      {workers.length > 0 && (
+      {/* WORKER SELECTOR BAR FOR ELIGIBILITY SIMULATION (only shown when multiple workers available) */}
+      {workers.length > 1 && (
         <div className="bg-white border border-kerala-coir-200 rounded-2xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
             <User className="w-4 h-4 text-kerala-green-800" />

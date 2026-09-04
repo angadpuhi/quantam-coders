@@ -18,10 +18,42 @@ import { KeralaMotif } from "@/components/KeralaMotif";
 import { WorkerRegistrationForm } from "@/components/WorkerRegistrationForm";
 import { WorkerSearchLookup } from "@/components/WorkerSearchLookup";
 
+import { useRouter } from "@/i18n/routing";
+import { useEffect } from "react";
+
 export default function RegistryPage() {
   const t = useTranslations("registry");
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<"search" | "register">("search");
+
+  const userRole = (session?.user as any)?.role;
+  const sessionHealthId = (session?.user as any)?.portableHealthId;
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login/staff?callbackUrl=/registry");
+      return;
+    }
+
+    if (status === "authenticated" && userRole === "WORKER") {
+      // Workers cannot access registry of other workers; redirect to their personal passport
+      if (sessionHealthId) {
+        router.replace(`/workers/${encodeURIComponent(sessionHealthId)}`);
+      } else {
+        router.replace("/login");
+      }
+    }
+  }, [status, userRole, sessionHealthId, router]);
+
+  if (status === "loading" || status === "unauthenticated" || userRole === "WORKER") {
+    return (
+      <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
+        <div className="h-32 bg-slate-100 rounded-houseboat animate-pulse" />
+        <p className="text-xs text-slate-500">Checking clinical registry permissions...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 max-w-6xl mx-auto">

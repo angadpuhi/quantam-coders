@@ -1,20 +1,35 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { getServerAuthSession, requireAuth } from "@/lib/auth";
 
-// GET /api/visits - List visits
+// GET /api/visits - List visits (ROLE-SCOPED)
 export async function GET(request: Request) {
   try {
+    const session = await getServerAuthSession();
+
+    if (!session || !session.user) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized. Please sign in." },
+        { status: 401 }
+      );
+    }
+
+    const role = (session.user as any).role;
+    const sessionWorkerId = (session.user as any).workerId;
+
     const { searchParams } = new URL(request.url);
     const workerId = searchParams.get("workerId")?.trim();
     const portableHealthId = searchParams.get("portableHealthId")?.trim();
     const facilityId = searchParams.get("facilityId")?.trim();
 
+    // If WORKER: Enforce querying only their own visits
+    const effectiveWorkerId = role === "WORKER" ? sessionWorkerId : workerId || undefined;
+
     const visits = await prisma.visit.findMany({
       where: {
-        workerId: workerId || undefined,
+        workerId: effectiveWorkerId,
         facilityId: facilityId || undefined,
-        worker: portableHealthId
+        worker: (role !== "WORKER" && portableHealthId)
           ? {
               portableHealthId,
             }
@@ -62,83 +77,63 @@ export async function POST(request: Request) {
       );
     }
 
-    const { workerId, portableHealthId, facilityId, date, notes } = body;
+    const { workerId, facilityId, date, notes } = body;
 
-    // Validate facilityId
+    if (!workerId || typeof workerId !== "string" || !workerId.trim()) {
+      return NextResponse.json(
+        { success: false, error: "Missing required field 'workerId'." },
+        { status: 400 }
+      );
+    }
+
     if (!facilityId || typeof facilityId !== "string" || !facilityId.trim()) {
       return NextResponse.json(
-        { success: false, error: "Field 'facilityId' is required." },
+        { success: false, error: "Missing required field 'facilityId'." },
         { status: 400 }
       );
     }
 
-    // Identify worker either by workerId or portableHealthId
-    if (!workerId && !portableHealthId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Either 'workerId' or 'portableHealthId' must be provided to associate the visit.",
-        },
-        { status: 400 }
-      );
-    }
-
-    // Verify worker exists
     const worker = await prisma.worker.findFirst({
       where: {
-        OR: [
-          workerId ? { id: String(workerId).trim() } : {},
-          portableHealthId ? { portableHealthId: String(portableHealthId).trim() } : {},
-        ],
+        OR: [{ id: workerId.trim() }, { portableHealthId: workerId.trim() }],
       },
     });
 
     if (!worker) {
       return NextResponse.json(
-        {
-          success: false,
-          error: `Worker '${workerId || portableHealthId}' does not exist in registry.`,
-        },
+        { success: false, error: `Worker '${workerId}' was not found.` },
         { status: 404 }
       );
     }
 
-    // Verify facility exists
     const facility = await prisma.facility.findUnique({
-      where: { id: String(facilityId).trim() },
+      where: { id: facilityId.trim() },
     });
 
     if (!facility) {
       return NextResponse.json(
-        {
-          success: false,
-          error: `Healthcare Facility with ID '${facilityId}' was not found.`,
-        },
+        { success: false, error: `Facility with ID '${facilityId}' was not found.` },
         { status: 404 }
       );
     }
 
-    // Parse date if provided
-    let visitDate = new Date();
+    let parsedDate = new Date();
     if (date) {
       const d = new Date(date);
       if (isNaN(d.getTime())) {
         return NextResponse.json(
-          {
-            success: false,
-            error: "Invalid date format for 'date'. Please use ISO-8601 (YYYY-MM-DD or full timestamp).",
-          },
+          { success: false, error: "Invalid date format for 'date'. Please use ISO-8601." },
           { status: 400 }
         );
       }
-      visitDate = d;
+      parsedDate = d;
     }
 
     const newVisit = await prisma.visit.create({
       data: {
         workerId: worker.id,
         facilityId: facility.id,
-        date: visitDate,
+        date: parsedDate,
         notes: notes ? String(notes).trim() : null,
       },
       include: {
@@ -161,7 +156,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: "Internal Server Error while creating visit record.",
+        error: "Internal Server Error while creating clinical visit.",
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

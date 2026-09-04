@@ -5,25 +5,31 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
-      role: "STAFF" | "ADMIN" | string;
+      role: "WORKER" | "PROVIDER" | "ADMIN" | "STAFF" | string;
       facilityId?: string | null;
       facilityName?: string | null;
+      workerId?: string | null;
+      portableHealthId?: string | null;
     } & DefaultSession["user"];
   }
 
   interface User extends DefaultUser {
     id: string;
-    role: "STAFF" | "ADMIN" | string;
+    role: "WORKER" | "PROVIDER" | "ADMIN" | "STAFF" | string;
     facilityId?: string | null;
     facilityName?: string | null;
+    workerId?: string | null;
+    portableHealthId?: string | null;
   }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
-    role: "STAFF" | "ADMIN" | string;
+    role: "WORKER" | "PROVIDER" | "ADMIN" | "STAFF" | string;
     facilityId?: string | null;
     facilityName?: string | null;
+    workerId?: string | null;
+    portableHealthId?: string | null;
   }
 }

@@ -1,6 +1,7 @@
 import React from "react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
+import { getServerAuthSession } from "@/lib/auth";
 import { KeralaMotif } from "@/components/KeralaMotif";
 import {
   FileText,
@@ -21,6 +22,16 @@ export default async function RecordsPage({
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale, namespace: "sections" });
+
+  const session = await getServerAuthSession();
+  const role = (session?.user as any)?.role;
+  const sessionHealthId = (session?.user as any)?.portableHealthId;
+  const isWorker = role === "WORKER";
+
+  // If worker, target links go to their own passport, otherwise to the staff registry
+  const targetLink = isWorker && sessionHealthId
+    ? `/workers/${encodeURIComponent(sessionHealthId)}`
+    : "/registry";
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -45,7 +56,7 @@ export default async function RecordsPage({
         </div>
       </div>
 
-      {/* Record Categories Grid (Scaffold) */}
+      {/* Record Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* 1. Prescriptions */}
         <div className="bg-white border border-kerala-coir-200 rounded-houseboat p-6 shadow-xs relative overflow-hidden flex flex-col justify-between">
@@ -62,10 +73,10 @@ export default async function RecordsPage({
 
           <div className="mt-6 pt-4 border-t border-kerala-coir-100">
             <Link
-              href="/registry"
+              href={targetLink as any}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-800 hover:text-emerald-950 transition"
             >
-              <span>View Active Regimens</span>
+              <span>{isWorker ? "View My Prescriptions" : "View Active Regimens"}</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -86,10 +97,10 @@ export default async function RecordsPage({
 
           <div className="mt-6 pt-4 border-t border-kerala-coir-100">
             <Link
-              href="/registry"
+              href={targetLink as any}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-800 hover:text-blue-950 transition"
             >
-              <span>Immunization Records</span>
+              <span>{isWorker ? "View My Immunizations" : "Immunization Records"}</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
@@ -110,10 +121,10 @@ export default async function RecordsPage({
 
           <div className="mt-6 pt-4 border-t border-kerala-coir-100">
             <Link
-              href="/registry"
+              href={targetLink as any}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-800 hover:text-amber-950 transition"
             >
-              <span>Diagnostic Archives</span>
+              <span>{isWorker ? "View My Lab Reports" : "Diagnostic Archives"}</span>
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
