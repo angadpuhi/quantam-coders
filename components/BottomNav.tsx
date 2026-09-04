@@ -1,19 +1,29 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/routing";
 import {
-  Home,
+  User,
   Zap,
   FolderOpen,
   HeartHandshake,
   Search,
+  Lock,
 } from "lucide-react";
 
 export function BottomNav() {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const [workerHealthId, setWorkerHealthId] = useState<string | null>(null);
+
+  // Read stored worker Health ID from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedId = localStorage.getItem("workerHealthId");
+      if (storedId) setWorkerHealthId(storedId);
+    }
+  }, [pathname]);
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -22,25 +32,40 @@ export function BottomNav() {
     return pathname.startsWith(path);
   };
 
-  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
-  if (isLoginPage) {
+  // Hide on ALL login routes (selector + sub-routes)
+  if (pathname.startsWith("/login")) {
     return null;
   }
 
-  const navItems = [
-    { href: "/", label: t("home"), icon: Home },
-    { href: "/quick-actions", label: t("quickActions"), icon: Zap },
-    { href: "/records", label: t("records"), icon: FolderOpen },
-    { href: "/schemes", label: t("schemes"), icon: HeartHandshake },
-    { href: "/registry", label: t("registerSearch"), icon: Search },
-  ];
+  // Detect worker mode
+  const isWorkerMode = pathname.startsWith("/workers/");
+
+  // Worker's passport link
+  const workerPassportHref = workerHealthId
+    ? `/workers/${encodeURIComponent(workerHealthId)}`
+    : pathname;
+
+  // Role-aware nav items
+  const navItems = isWorkerMode
+    ? [
+        { href: workerPassportHref, label: "My Passport", icon: User },
+        { href: "/quick-actions", label: t("quickActions"), icon: Zap },
+        { href: "/schemes", label: t("schemes"), icon: HeartHandshake },
+        { href: "/privacy", label: t("privacy"), icon: Lock },
+      ]
+    : [
+        { href: "/quick-actions", label: t("quickActions"), icon: Zap },
+        { href: "/records", label: t("records"), icon: FolderOpen },
+        { href: "/schemes", label: t("schemes"), icon: HeartHandshake },
+        { href: "/registry", label: t("registerSearch"), icon: Search },
+      ];
 
   return (
     <nav
       className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#fffefc]/95 backdrop-blur-lg border-t border-[#efeeeb] shadow-xl px-2 py-1.5"
       aria-label="Mobile Bottom Navigation"
     >
-      <div className="grid grid-cols-5 items-center justify-around">
+      <div className={`grid grid-cols-${navItems.length} items-center justify-around`}>
         {navItems.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;

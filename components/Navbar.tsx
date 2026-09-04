@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { useSession, signOut } from "next-auth/react";
@@ -19,6 +19,8 @@ import {
   ArrowRight,
   PhoneCall,
   Calendar,
+  User,
+  Stethoscope,
 } from "lucide-react";
 
 export function Navbar() {
@@ -28,14 +30,26 @@ export function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [workerHealthId, setWorkerHealthId] = useState<string | null>(null);
 
   const languages = [
     { code: "en", label: "English" },
     { code: "ml", label: "മലയാളം" },
     { code: "hi", label: "हिन्दी" },
     { code: "bn", label: "বাংলা" },
-    { code: "or", label: "ଓଡ଼ିଆ" },
+    { code: "or", label: "ଓଡ଼ி��"},
   ];
+
+  // Detect worker mode: worker is browsing their own passport
+  const isWorkerMode = pathname.startsWith("/workers/");
+
+  // Read stored worker Health ID from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedId = localStorage.getItem("workerHealthId");
+      if (storedId) setWorkerHealthId(storedId);
+    }
+  }, [pathname]);
 
   const handleLanguageChange = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale });
@@ -48,10 +62,28 @@ export function Navbar() {
     return pathname.startsWith(path);
   };
 
-  const isLoginPage = pathname === "/login" || pathname.endsWith("/login");
+  // Hide navbar on ALL login routes (selector + sub-routes)
+  const isLoginPage = pathname.startsWith("/login");
   if (isLoginPage) {
     return null;
   }
+
+  // Determine the user role for nav filtering
+  const sessionRole = (session?.user as any)?.role;
+  const isAdmin = sessionRole === "ADMIN";
+  const isProvider = sessionRole === "PROVIDER" || sessionRole === "STAFF";
+
+  // Build the worker's passport link
+  const workerPassportHref = workerHealthId
+    ? `/workers/${encodeURIComponent(workerHealthId)}`
+    : pathname; // fallback to current path if on /workers/xxx
+
+  const handleWorkerSignOut = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("workerHealthId");
+    }
+    router.push("/login");
+  };
 
   return (
     <>
@@ -93,9 +125,9 @@ export function Navbar() {
       <nav className="bg-[#fffefc]/95 backdrop-blur-md border-b border-[#efeeeb] sticky top-0 z-40">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-8">
           <div className="flex items-center justify-between h-[72px]">
-            {/* Logo matching ArogyaRekha visual identity */}
+            {/* Logo — links to login (since / redirects to /login) */}
             <Link
-              href="/"
+              href="/login"
               className="flex items-center gap-2.5 group focus:outline-hidden"
             >
               <span
@@ -114,74 +146,123 @@ export function Navbar() {
               </div>
             </Link>
 
-            {/* Desktop Navigation Links */}
+            {/* Desktop Navigation Links — ROLE AWARE */}
             <div className="hidden lg:flex items-center space-x-7 text-[14px] text-[#222222]">
-              <Link
-                href="/#features"
-                className="hover:text-[#0f3e17] transition-colors py-1.5"
-              >
-                What&apos;s inside
-              </Link>
-              <Link
-                href="/#how-it-works"
-                className="hover:text-[#0f3e17] transition-colors py-1.5"
-              >
-                How it works
-              </Link>
-              <Link
-                href="/quick-actions"
-                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
-                  isActive("/quick-actions") ? "text-[#0f3e17] font-semibold" : ""
-                }`}
-              >
-                {t("quickActions")}
-              </Link>
-              <Link
-                href="/records"
-                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
-                  isActive("/records") ? "text-[#0f3e17] font-semibold" : ""
-                }`}
-              >
-                {t("records")}
-              </Link>
-              <Link
-                href="/appointments"
-                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
-                  isActive("/appointments") ? "text-[#0f3e17] font-semibold" : ""
-                }`}
-              >
-                Appointments
-              </Link>
-              <Link
-                href="/schemes"
-                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
-                  isActive("/schemes") ? "text-[#0f3e17] font-semibold" : ""
-                }`}
-              >
-                {t("schemes")}
-              </Link>
-              <Link
-                href="/privacy"
-                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
-                  isActive("/privacy") ? "text-[#0f3e17] font-semibold" : ""
-                }`}
-              >
-                {t("privacy")}
-              </Link>
-              <Link
-                href="/registry"
-                className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
-                  isActive("/registry") ? "text-[#0f3e17] font-semibold" : ""
-                }`}
-              >
-                {t("registerSearch")}
-              </Link>
+              {isWorkerMode ? (
+                /* WORKER NAV: Only passport-relevant links */
+                <>
+                  <Link
+                    href={workerPassportHref as any}
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 flex items-center gap-1.5 ${
+                      isActive("/workers") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    My Passport
+                  </Link>
+                  <Link
+                    href="/quick-actions"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/quick-actions") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("quickActions")}
+                  </Link>
+                  <Link
+                    href="/schemes"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/schemes") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("schemes")}
+                  </Link>
+                  <Link
+                    href="/privacy"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/privacy") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("privacy")}
+                  </Link>
+                </>
+              ) : (
+                /* STAFF / ADMIN NAV: Full navigation */
+                <>
+                  <Link
+                    href="/quick-actions"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/quick-actions") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("quickActions")}
+                  </Link>
+                  <Link
+                    href="/records"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/records") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("records")}
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/appointments") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    Appointments
+                  </Link>
+                  <Link
+                    href="/schemes"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/schemes") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("schemes")}
+                  </Link>
+                  <Link
+                    href="/privacy"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/privacy") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("privacy")}
+                  </Link>
+                  <Link
+                    href="/registry"
+                    className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                      isActive("/registry") ? "text-[#0f3e17] font-semibold" : ""
+                    }`}
+                  >
+                    {t("registerSearch")}
+                  </Link>
+                  {(isAdmin || (!isProvider && !isWorkerMode)) && (
+                    <Link
+                      href="/admin"
+                      className={`hover:text-[#0f3e17] transition-colors py-1.5 ${
+                        isActive("/admin") ? "text-[#0f3e17] font-semibold" : ""
+                      }`}
+                    >
+                      {t("surveillance")}
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Right CTAs */}
             <div className="flex items-center gap-3">
-              {/* Provider Login / Session */}
-              {status === "authenticated" && session ? (
+              {isWorkerMode ? (
+                /* Worker: Back to Login button */
+                <button
+                  type="button"
+                  onClick={handleWorkerSignOut}
+                  className="inline-flex items-center gap-1.5 border border-[#0f3e17] text-[#0f3e17] hover:bg-[#e1f4df]/60 font-medium px-3.5 py-2 rounded-card text-xs transition"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Sign Out</span>
+                </button>
+              ) : status === "authenticated" && session ? (
                 <div className="flex items-center gap-2">
                   <div className="hidden sm:flex flex-col text-right">
                     <span className="text-xs font-semibold text-[#0f3e17] leading-tight">
@@ -194,7 +275,7 @@ export function Navbar() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => signOut({ callbackUrl: "/" })}
+                    onClick={() => signOut({ callbackUrl: "/login" })}
                     title={t("signOut")}
                     className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-red-700 bg-slate-100 hover:bg-red-50 p-2 rounded-card border border-[#efeeeb] transition"
                   >
@@ -208,17 +289,9 @@ export function Navbar() {
                   className="hidden sm:inline-flex items-center gap-1.5 border border-[#0f3e17] text-[#0f3e17] hover:bg-[#e1f4df]/60 font-medium px-3.5 py-2 rounded-card text-xs transition"
                 >
                   <LogIn className="w-3.5 h-3.5" />
-                  <span>{t("login")}</span>
+                  <span>{t("staffLogin")}</span>
                 </Link>
               )}
-
-              {/* Main Primary CTA Button */}
-              <Link
-                href="/registry"
-                className="bg-[#0f3e17] hover:bg-[#0c2f10] text-[#fffefc] text-xs sm:text-[13px] font-medium px-4 py-2.5 rounded-card inline-flex items-center gap-2 shadow-xs transition"
-              >
-                <span>Get Health ID →</span>
-              </Link>
 
               {/* Mobile Menu Hamburger */}
               <button
@@ -233,97 +306,141 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile Navigation Drawer — ROLE AWARE */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-[#efeeeb] bg-[#fffefc] px-4 pt-3 pb-6 space-y-3 shadow-lg">
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <Link
-                href="/#features"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium"
-              >
-                What&apos;s inside
-              </Link>
-              <Link
-                href="/#how-it-works"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium"
-              >
-                How it works
-              </Link>
-              <Link
-                href="/quick-actions"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
-              >
-                <Zap className="w-3.5 h-3.5" />
-                <span>{t("quickActions")}</span>
-              </Link>
-              <Link
-                href="/records"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
-              >
-                <FolderOpen className="w-3.5 h-3.5" />
-                <span>{t("records")}</span>
-              </Link>
-              <Link
-                href="/appointments"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
-              >
-                <Calendar className="w-3.5 h-3.5" />
-                <span>Appointments</span>
-              </Link>
-              <Link
-                href="/schemes"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
-              >
-                <HeartHandshake className="w-3.5 h-3.5" />
-                <span>{t("schemes")}</span>
-              </Link>
-              <Link
-                href="/privacy"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
-              >
-                <Lock className="w-3.5 h-3.5" />
-                <span>{t("privacy")}</span>
-              </Link>
-              <Link
-                href="/registry"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
-              >
-                <Search className="w-3.5 h-3.5" />
-                <span>{t("registerSearch")}</span>
-              </Link>
-              <Link
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
-              >
-                <Activity className="w-3.5 h-3.5" />
-                <span>{t("surveillance")}</span>
-              </Link>
+              {isWorkerMode ? (
+                /* WORKER MOBILE NAV */
+                <>
+                  <Link
+                    href={workerPassportHref as any}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <User className="w-3.5 h-3.5" />
+                    <span>My Passport</span>
+                  </Link>
+                  <Link
+                    href="/quick-actions"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>{t("quickActions")}</span>
+                  </Link>
+                  <Link
+                    href="/schemes"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <HeartHandshake className="w-3.5 h-3.5" />
+                    <span>{t("schemes")}</span>
+                  </Link>
+                  <Link
+                    href="/privacy"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>{t("privacy")}</span>
+                  </Link>
+                </>
+              ) : (
+                /* STAFF / ADMIN MOBILE NAV */
+                <>
+                  <Link
+                    href="/quick-actions"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <Zap className="w-3.5 h-3.5" />
+                    <span>{t("quickActions")}</span>
+                  </Link>
+                  <Link
+                    href="/records"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5" />
+                    <span>{t("records")}</span>
+                  </Link>
+                  <Link
+                    href="/appointments"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span>Appointments</span>
+                  </Link>
+                  <Link
+                    href="/schemes"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <HeartHandshake className="w-3.5 h-3.5" />
+                    <span>{t("schemes")}</span>
+                  </Link>
+                  <Link
+                    href="/privacy"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>{t("privacy")}</span>
+                  </Link>
+                  <Link
+                    href="/registry"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                  >
+                    <Search className="w-3.5 h-3.5" />
+                    <span>{t("registerSearch")}</span>
+                  </Link>
+                  {(isAdmin || (!isProvider && !isWorkerMode)) && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="p-2.5 rounded-nav bg-slate-50 hover:bg-[#e1f4df] text-[#0f3e17] font-medium flex items-center gap-1.5"
+                    >
+                      <Activity className="w-3.5 h-3.5" />
+                      <span>{t("surveillance")}</span>
+                    </Link>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="pt-2 border-t border-[#efeeeb] flex gap-2">
-              <Link
-                href="/login"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
-              >
-                {t("login")}
-              </Link>
-              <Link
-                href="/registry"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 text-center py-2 rounded-card bg-[#0f3e17] text-[#fffefc] text-xs font-semibold"
-              >
-                Get Health ID →
-              </Link>
+              {isWorkerMode ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleWorkerSignOut();
+                  }}
+                  className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2 rounded-card border border-[#0f3e17] text-[#0f3e17] text-xs font-semibold"
+                  >
+                    {t("staffLogin")}
+                  </Link>
+                  <Link
+                    href="/registry"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex-1 text-center py-2 rounded-card bg-[#0f3e17] text-[#fffefc] text-xs font-semibold"
+                  >
+                    Get Health ID →
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

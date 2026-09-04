@@ -1,5 +1,6 @@
 import React from "react";
 import { setRequestLocale } from "next-intl/server";
+import { redirect } from "@/i18n/routing";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
 import {
@@ -35,6 +36,9 @@ export default async function LandingHomePage({
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+
+  // Redirect to login page — the login role selector is the entry point
+  redirect({ href: "/login", locale });
 
   // Fetch real seeded aggregate counts and workers from SQLite database
   let workerCount = 0;

@@ -59,6 +59,7 @@ function WorkerLoginForm() {
 
       if (res.ok && json.success && json.data?.worker) {
         const cleanId = json.data.worker.portableHealthId;
+        if (typeof window !== "undefined") localStorage.setItem("workerHealthId", cleanId);
         router.push(callbackUrl || `/workers/${encodeURIComponent(cleanId)}`);
         router.refresh();
       } else {
@@ -66,6 +67,7 @@ function WorkerLoginForm() {
         const listJson = await listRes.json();
         if (listRes.ok && listJson.success && listJson.data?.length > 0) {
           const cleanId = listJson.data[0].portableHealthId;
+          if (typeof window !== "undefined") localStorage.setItem("workerHealthId", cleanId);
           router.push(callbackUrl || `/workers/${encodeURIComponent(cleanId)}`);
           router.refresh();
         } else {
@@ -82,6 +84,7 @@ function WorkerLoginForm() {
   const handleQrScanned = (scannedId: string) => {
     setShowQrScanner(false);
     setWorkerHealthId(scannedId);
+    if (typeof window !== "undefined") localStorage.setItem("workerHealthId", scannedId);
     router.push(`/workers/${encodeURIComponent(scannedId)}`);
   };
 
