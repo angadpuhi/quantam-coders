@@ -14,9 +14,8 @@ export const authOptions: NextAuthOptions = {
     signIn: "/login",
   },
   providers: [
-    // 1. Staff & Admin Credentials Provider (Email & Password)
     CredentialsProvider({
-      id: "credentials",
+      id: "provider-credentials",
       name: "Kerala Health Portal Credentials",
       credentials: {
         email: { label: "Email", type: "email", placeholder: "provider@keralahealth.gov.in" },
@@ -53,60 +52,53 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-
-    // 2. Worker Credentials Provider (Portable Health ID or Phone + 4-digit Security PIN)
     CredentialsProvider({
       id: "worker-credentials",
-      name: "Kerala Athidhi Swasthya Worker Authentication",
+      name: "Worker Health ID Login",
       credentials: {
         portableHealthId: { label: "Portable Health ID or Phone", type: "text" },
         pin: { label: "Security PIN", type: "password" },
       },
       async authorize(credentials) {
-        const query = credentials?.portableHealthId?.trim();
+        const identifier = credentials?.portableHealthId?.trim();
         const pin = credentials?.pin?.trim();
 
-        if (!query) {
-          throw new Error("Please enter your Portable Health ID or registered phone number.");
+        if (!identifier || !pin) {
+          throw new Error("Please provide your Health ID and PIN.");
         }
 
-        if (!pin) {
-          throw new Error("Please enter your 4-digit Security PIN.");
-        }
-
-        // Search for worker by exact portableHealthId or phone
         const worker = await prisma.worker.findFirst({
           where: {
             OR: [
-              { portableHealthId: query },
-              { portableHealthId: query.toUpperCase() },
-              { phone: query },
-              { phone: query.replace(/\s+/g, "") },
+              { portableHealthId: identifier },
+              { portableHealthId: identifier.toUpperCase() },
+              { phone: identifier },
+              { phone: identifier.replace(/\s+/g, "") },
             ],
           },
         });
 
         if (!worker) {
-          throw new Error(`No worker found matching "${query}". Please check your Health ID.`);
+          throw new Error("No worker record found for that Health ID or phone number.");
         }
 
-        // Verify PIN: Default/demo PIN is "1234", or last 4 digits of phone if configured
-        const validPins = ["1234"];
-        if (worker.phone) {
-          const digits = worker.phone.replace(/\D/g, "");
-          if (digits.length >= 4) {
-            validPins.push(digits.slice(-4));
-          }
+        // If worker has a hashed pin in DB, verify using bcrypt.
+        // Fallback for demo convenience: if worker.pin is not set, allow demo "1234".
+        let isPinValid = false;
+        if (worker.pin) {
+          isPinValid = await bcrypt.compare(pin, worker.pin);
+        } else if (pin === "1234") {
+          isPinValid = true;
         }
 
-        if (!validPins.includes(pin)) {
-          throw new Error("Invalid Security PIN. (Demo default PIN is 1234)");
+        if (!isPinValid) {
+          throw new Error("Incorrect PIN.");
         }
 
         return {
           id: worker.id,
           name: worker.name,
-          email: `${worker.portableHealthId.toLowerCase()}@worker.keralahealth.gov.in`,
+          email: "",
           role: "WORKER",
           workerId: worker.id,
           portableHealthId: worker.portableHealthId,
@@ -119,12 +111,13 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        const rawRole = (user as any).role;
         token.id = user.id;
-        token.role = user.role === "STAFF" ? "PROVIDER" : user.role;
-        token.facilityId = user.facilityId;
-        token.facilityName = user.facilityName;
-        token.workerId = (user as any).workerId || null;
-        token.portableHealthId = (user as any).portableHealthId || null;
+        token.role = rawRole === "STAFF" ? "PROVIDER" : rawRole;
+        token.facilityId = (user as any).facilityId ?? null;
+        token.facilityName = (user as any).facilityName ?? null;
+        token.workerId = (user as any).workerId ?? null;
+        token.portableHealthId = (user as any).portableHealthId ?? null;
       }
       return token;
     },
@@ -132,10 +125,10 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id;
         session.user.role = token.role === "STAFF" ? "PROVIDER" : (token.role || "PROVIDER");
-        session.user.facilityId = token.facilityId;
-        session.user.facilityName = token.facilityName;
-        (session.user as any).workerId = token.workerId || null;
-        (session.user as any).portableHealthId = token.portableHealthId || null;
+        session.user.facilityId = (token.facilityId as string) ?? null;
+        session.user.facilityName = (token.facilityName as string) ?? null;
+        (session.user as any).workerId = (token as any).workerId ?? null;
+        (session.user as any).portableHealthId = (token as any).portableHealthId ?? null;
       }
       return session;
     },
@@ -157,7 +150,7 @@ export async function requireAuth(allowedRoles: string[] = ["PROVIDER", "ADMIN"]
     return NextResponse.json(
       {
         success: false,
-        error: "Unauthorized. Login is required for this action.",
+        error: "Unauthorized. Healthcare Provider or Admin login is required for this action.",
       },
       { status: 401 }
     );
@@ -179,4 +172,56 @@ export async function requireAuth(allowedRoles: string[] = ["PROVIDER", "ADMIN"]
   }
 
   return null; // Authorized
+}
+
+/**
+ * Loads the current session and, for API routes that expose a single worker's
+ * data, enforces that either:
+ *  - the caller is a PROVIDER/ADMIN (staff can see any worker), or
+ *  - the caller is a WORKER whose own workerId matches the requested worker.
+ *
+ * `workerMatch` should be the worker's internal id AND/OR portableHealthId,
+ * since routes accept either as the URL param. Returns null if authorized,
+ * otherwise a NextResponse to return immediately.
+ */
+export async function requireOwnWorkerOrStaff(workerMatch: {
+  id?: string | null;
+  portableHealthId?: string | null;
+}) {
+  const session = await getServerAuthSession();
+
+  if (!session || !session.user) {
+    return NextResponse.json(
+      { success: false, error: "Unauthorized. Please log in to view this record." },
+      { status: 401 }
+    );
+  }
+
+  const role = session.user.role === "STAFF" ? "PROVIDER" : session.user.role;
+
+  if (role === "PROVIDER" || role === "ADMIN") {
+    return null;
+  }
+
+  if (role === "WORKER") {
+    const sessionWorkerId = (session.user as any).workerId as string | null;
+    const sessionHealthId = (session.user as any).portableHealthId as string | null;
+    const matches =
+      (workerMatch.id && sessionWorkerId && workerMatch.id === sessionWorkerId) ||
+      (workerMatch.portableHealthId &&
+        sessionHealthId &&
+        workerMatch.portableHealthId.toUpperCase() === sessionHealthId.toUpperCase());
+
+    if (matches) return null;
+
+    return NextResponse.json(
+      { success: false, error: "Forbidden. You can only view your own health record." },
+      { status: 403 }
+    );
+  }
+
+  return NextResponse.json(
+    { success: false, error: "Forbidden. Unrecognized role." },
+    { status: 403 }
+  );
 }

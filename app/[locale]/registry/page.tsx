@@ -23,34 +23,39 @@ import { useEffect } from "react";
 
 export default function RegistryPage() {
   const t = useTranslations("registry");
-  const router = useRouter();
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState<"search" | "register">("search");
 
-  const userRole = (session?.user as any)?.role;
-  const sessionHealthId = (session?.user as any)?.portableHealthId;
+  const role = session?.user?.role === "STAFF" ? "PROVIDER" : session?.user?.role;
+  const isStaff = role === "PROVIDER" || role === "ADMIN";
 
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login/staff?callbackUrl=/registry");
-      return;
-    }
-
-    if (status === "authenticated" && userRole === "WORKER") {
-      // Workers cannot access registry of other workers; redirect to their personal passport
-      if (sessionHealthId) {
-        router.replace(`/workers/${encodeURIComponent(sessionHealthId)}`);
-      } else {
-        router.replace("/login");
-      }
-    }
-  }, [status, userRole, sessionHealthId, router]);
-
-  if (status === "loading" || status === "unauthenticated" || userRole === "WORKER") {
+  if (status === "loading") {
     return (
-      <div className="max-w-4xl mx-auto py-16 text-center space-y-3">
-        <div className="h-32 bg-slate-100 rounded-houseboat animate-pulse" />
-        <p className="text-xs text-slate-500">Checking clinical registry permissions...</p>
+      <div className="max-w-6xl mx-auto py-16 text-center text-sm text-slate-400">
+        Loading...
+      </div>
+    );
+  }
+
+  if (!session || !isStaff) {
+    return (
+      <div className="max-w-2xl mx-auto py-16 text-center">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-red-50 text-red-700 border border-red-200 mb-4">
+          <ShieldCheck className="w-7 h-7" />
+        </div>
+        <h1 className="text-xl font-bold text-slate-900">Restricted to Health Staff</h1>
+        <p className="text-sm text-slate-500 mt-2 max-w-md mx-auto">
+          The Worker Registry (search and registration) is only accessible to signed-in
+          Providers and Admins. Workers can view their own record from the Worker Health
+          Portal login.
+        </p>
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-2 mt-5 px-5 py-2.5 rounded-xl bg-[#0f3e17] text-white text-sm font-bold shadow-xs"
+        >
+          <LogIn className="w-4 h-4" />
+          Go to Login
+        </Link>
       </div>
     );
   }

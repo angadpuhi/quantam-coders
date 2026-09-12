@@ -75,6 +75,7 @@ async function main() {
 
   // 2. Create Healthcare Provider & Admin Users
   const providerPassword = await bcrypt.hash("password123", 10);
+  const workerPinHash = await bcrypt.hash("1234", 10); // Demo self-service PIN for all seeded workers
   const adminPassword = await bcrypt.hash("admin123", 10);
 
   // Healthcare Provider 1 (Primary)
@@ -151,6 +152,7 @@ async function main() {
       district: "Ernakulam",
       currentAddress: "Plywood Colony, Rayonpuram, Perumbavoor, Ernakulam, Kerala",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
     create: {
       id: "worker-1",
@@ -163,6 +165,7 @@ async function main() {
       currentAddress: "Plywood Colony, Rayonpuram, Perumbavoor, Ernakulam, Kerala",
       portableHealthId: "KL-MH-829104",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
   });
 
@@ -178,6 +181,7 @@ async function main() {
       district: "Kozhikode",
       currentAddress: "Camp Shed 4, Beach Road, Kozhikode, Kerala",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
     create: {
       id: "worker-2",
@@ -190,6 +194,7 @@ async function main() {
       currentAddress: "Camp Shed 4, Beach Road, Kozhikode, Kerala",
       portableHealthId: "KL-MH-654219",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
   });
 
@@ -205,6 +210,7 @@ async function main() {
       district: "Palakkad",
       currentAddress: "Kanjikode Industrial Area, Palakkad, Kerala",
       riskStatus: "YELLOW",
+      pin: workerPinHash,
     },
     create: {
       id: "worker-3",
@@ -217,6 +223,7 @@ async function main() {
       currentAddress: "Kanjikode Industrial Area, Palakkad, Kerala",
       portableHealthId: "KL-MH-338102",
       riskStatus: "YELLOW",
+      pin: workerPinHash,
     },
   });
 
@@ -232,6 +239,7 @@ async function main() {
       district: "Ernakulam",
       currentAddress: "Aluva Construction Camp, Ernakulam, Kerala",
       riskStatus: "RED",
+      pin: workerPinHash,
     },
     create: {
       id: "worker-4",
@@ -244,6 +252,7 @@ async function main() {
       currentAddress: "Aluva Construction Camp, Ernakulam, Kerala",
       portableHealthId: "KL-MH-491084",
       riskStatus: "RED",
+      pin: workerPinHash,
     },
   });
 
@@ -259,6 +268,7 @@ async function main() {
       district: "Thiruvananthapuram",
       currentAddress: "Vizhinjam Port Labour Quarters, Thiruvananthapuram, Kerala",
       riskStatus: "YELLOW",
+      pin: workerPinHash,
     },
     create: {
       id: "worker-5",
@@ -271,6 +281,7 @@ async function main() {
       currentAddress: "Vizhinjam Port Labour Quarters, Thiruvananthapuram, Kerala",
       portableHealthId: "KL-MH-712903",
       riskStatus: "YELLOW",
+      pin: workerPinHash,
     },
   });
 
@@ -286,6 +297,7 @@ async function main() {
       district: "Thrissur",
       currentAddress: "Kuriachira Timber Depot, Thrissur, Kerala",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
     create: {
       id: "worker-6",
@@ -298,6 +310,7 @@ async function main() {
       currentAddress: "Kuriachira Timber Depot, Thrissur, Kerala",
       portableHealthId: "KL-MH-552019",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
   });
 
@@ -313,6 +326,7 @@ async function main() {
       district: "Malappuram",
       currentAddress: "Edappal Brick Kiln Colony, Malappuram, Kerala",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
     create: {
       id: "worker-7",
@@ -325,6 +339,7 @@ async function main() {
       currentAddress: "Edappal Brick Kiln Colony, Malappuram, Kerala",
       portableHealthId: "KL-MH-910482",
       riskStatus: "GREEN",
+      pin: workerPinHash,
     },
   });
 

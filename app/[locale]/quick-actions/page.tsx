@@ -3,10 +3,22 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/routing";
 import { prisma } from "@/lib/prisma";
 import { getServerAuthSession } from "@/lib/auth";
-import { KeralaMotif } from "@/components/KeralaMotif";
+import { redirect } from "next/navigation";
+import { KeralaMotif, KeralaPalmIcon } from "@/components/KeralaMotif";
 import { TwoMinuteHealthCheck } from "@/components/TwoMinuteHealthCheck";
 import { VoiceInputWidget } from "@/components/VoiceInputWidget";
-import { Sparkles } from "lucide-react";
+import {
+  Mic,
+  HeartPulse,
+  Sparkles,
+  ArrowRight,
+  Activity,
+  PhoneCall,
+  Languages,
+  Stethoscope,
+  ShieldAlert,
+  Clock,
+} from "lucide-react";
 
 export default async function QuickActionsPage({
   params,
@@ -19,36 +31,26 @@ export default async function QuickActionsPage({
   const tVoice = await getTranslations({ locale, namespace: "voiceInput" });
 
   const session = await getServerAuthSession();
-  const role = (session?.user as any)?.role;
-  const sessionWorkerId = (session?.user as any)?.workerId;
+  if (!session || !session.user) {
+    redirect(`/${locale}/login?callbackUrl=/${locale}/quick-actions`);
+  }
+  const role = session.user.role === "STAFF" ? "PROVIDER" : session.user.role;
+  const isWorker = role === "WORKER";
+  const workerId = (session.user as any).workerId as string | null;
 
   let workers: any[] = [];
   try {
-    if (role === "WORKER" && sessionWorkerId) {
-      // Worker only sees themselves in triage
-      workers = await prisma.worker.findMany({
-        where: { id: sessionWorkerId },
-        select: {
-          id: true,
-          name: true,
-          portableHealthId: true,
-          riskStatus: true,
-          homeState: true,
-        },
-      });
-    } else {
-      // Healthcare Provider / Admin / General view
-      workers = await prisma.worker.findMany({
-        select: {
-          id: true,
-          name: true,
-          portableHealthId: true,
-          riskStatus: true,
-          homeState: true,
-        },
-        orderBy: { createdAt: "desc" },
-      });
-    }
+    workers = await prisma.worker.findMany({
+      where: isWorker ? { id: workerId ?? "__none__" } : undefined,
+      select: {
+        id: true,
+        name: true,
+        portableHealthId: true,
+        riskStatus: true,
+        homeState: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
   } catch (err) {
     console.error("Error fetching workers for QuickActions:", err);
   }

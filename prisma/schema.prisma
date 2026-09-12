@@ -32,6 +32,7 @@ model Worker {
   district         String      @default("Ernakulam") // Kerala District (e.g., Ernakulam, Kozhikode, Palakkad, Thiruvananthapuram)
   currentAddress   String?
   portableHealthId String      @unique
+  pin              String?     // Hashed with bcrypt. Worker's self-service login PIN.
   riskStatus       String      @default("GREEN") // "GREEN" (Stable), "YELLOW" (Needs Monitoring), "RED" (Urgent)
   createdAt        DateTime    @default(now())
   updatedAt        DateTime    @updatedAt

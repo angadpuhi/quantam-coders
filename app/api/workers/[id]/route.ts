@@ -1,27 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getServerAuthSession, requireAuth } from "@/lib/auth";
+import { requireAuth, requireOwnWorkerOrStaff } from "@/lib/auth";
 
-// GET /api/workers/[id] - PROTECTED:
-// - WORKER role: Can ONLY access their own record matching workerId or portableHealthId
-// - PROVIDER / ADMIN: Can access clinical records for any worker
+// GET /api/workers/[id] - PROTECTED: Fetch full health history by id OR portableHealthId.
+// Only staff (PROVIDER/ADMIN) or the worker themselves (matching session) may view it.
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerAuthSession();
-
-    if (!session || !session.user) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. Please sign in to view clinical records.",
-        },
-        { status: 401 }
-      );
-    }
-
     const { id } = await params;
     const identifier = id?.trim();
 
@@ -32,26 +19,11 @@ export async function GET(
       );
     }
 
-    const userRole = (session.user as any).role;
-    const sessionWorkerId = (session.user as any).workerId;
-    const sessionHealthId = (session.user as any).portableHealthId;
-
-    // STRICT WORKER ISOLATION: Worker can ONLY view their own profile
-    if (userRole === "WORKER") {
-      const isSelf =
-        identifier === sessionWorkerId ||
-        identifier.toUpperCase() === sessionHealthId?.toUpperCase();
-
-      if (!isSelf) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Forbidden. Workers are strictly permitted to view only their own health records.",
-          },
-          { status: 403 }
-        );
-      }
-    }
+    const authError = await requireOwnWorkerOrStaff({
+      id: identifier,
+      portableHealthId: identifier,
+    });
+    if (authError) return authError;
 
     // Try finding by internal database ID or portableHealthId
     const worker = await prisma.worker.findFirst({
@@ -90,18 +62,6 @@ export async function GET(
           error: `Worker with ID or Portable Health ID '${identifier}' was not found.`,
         },
         { status: 404 }
-      );
-    }
-
-    // Double-check worker session ownership against found worker database ID
-    if (userRole === "WORKER" && worker.id !== sessionWorkerId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Forbidden. Access to this health record is not permitted.",
-        },
-        { status: 403 }
-      );
     }
 
     // Aggregate summary statistics for clinical overview

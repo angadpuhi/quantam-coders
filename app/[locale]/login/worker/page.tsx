@@ -52,9 +52,8 @@ function WorkerLoginForm() {
       setError("Please enter your Portable Health ID or registered phone number.");
       return;
     }
-
-    if (!pin) {
-      setError("Please enter your 4-digit Security PIN.");
+    if (!workerPin.trim()) {
+      setError("Please enter your Security PIN.");
       return;
     }
 
@@ -62,56 +61,29 @@ function WorkerLoginForm() {
     setError(null);
 
     try {
-      // Authenticate via authentic NextAuth worker session with server-side PIN verification
       const result = await signIn("worker-credentials", {
-        redirect: false,
         portableHealthId: query,
-        pin,
+        pin: workerPin.trim(),
+        redirect: false,
       });
 
       if (result?.error) {
         setError(result.error);
-        setLoading(false);
         return;
       }
 
-      // Read clean worker ID and redirect to their personal passport
-      const cleanId = query.toUpperCase().startsWith("KL-MH-") ? query.toUpperCase() : query;
-      const targetUrl = callbackUrl || `/workers/${encodeURIComponent(cleanId)}`;
-      router.push(targetUrl);
+      router.push(callbackUrl || "/quick-actions");
       router.refresh();
     } catch (err: any) {
-      setError(err?.message || "Failed to authenticate worker.");
+      setError(err?.message || "Failed to sign in. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
 
-  const handleQrScanned = async (scannedId: string) => {
+  const handleQrScanned = (scannedId: string) => {
     setShowQrScanner(false);
     setWorkerHealthId(scannedId);
-    setLoading(true);
-    setError(null);
-
-    // Auto-attempt sign in with demo PIN 1234 on QR scan
-    try {
-      const result = await signIn("worker-credentials", {
-        redirect: false,
-        portableHealthId: scannedId,
-        pin: "1234",
-      });
-
-      if (result?.error) {
-        setError(`Scanned Card ${scannedId}: ${result.error}. Please verify your PIN.`);
-        setLoading(false);
-        return;
-      }
-
-      router.push(callbackUrl || `/workers/${encodeURIComponent(scannedId)}`);
-      router.refresh();
-    } catch (err: any) {
-      setError(err?.message || "Failed to sign in with scanned QR card.");
-      setLoading(false);
-    }
   };
 
   return (

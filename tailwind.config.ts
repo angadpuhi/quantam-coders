@@ -91,9 +91,9 @@ const config: Config = {
       },
       borderRadius: {
         nav: "7px",
-        card: "14px",
+        card: "10px",
         pill: "999px",
-        houseboat: "1.75rem",
+        houseboat: "0.875rem",
       },
     },
   },

@@ -39,12 +39,15 @@ export function Navbar() {
     { code: "or", label: "ଓଡ଼ିଆ" },
   ];
 
-  // Determine user role and identifiers directly from authentic NextAuth session
-  const userRole = (session?.user as any)?.role;
-  const isWorker = userRole === "WORKER";
-  const isAdmin = userRole === "ADMIN";
-  const isProvider = userRole === "PROVIDER" || userRole === "STAFF";
-  const sessionHealthId = (session?.user as any)?.portableHealthId;
+  // Determine the user role for nav filtering
+  const sessionRole = (session?.user as any)?.role === "STAFF" ? "PROVIDER" : (session?.user as any)?.role;
+  const isAdmin = sessionRole === "ADMIN";
+  const isProvider = sessionRole === "PROVIDER";
+  const isWorkerSession = sessionRole === "WORKER";
+  const sessionPortableHealthId = (session?.user as any)?.portableHealthId as string | null;
+
+  // Worker mode: signed-in worker, or a staff member viewing a specific passport
+  const isWorkerMode = isWorkerSession || pathname.startsWith("/workers/");
 
   const handleLanguageChange = (newLocale: string) => {
     router.replace(pathname, { locale: newLocale });
@@ -63,14 +66,35 @@ export function Navbar() {
     return null;
   }
 
-  // Worker's personal passport link
-  const workerPassportHref = sessionHealthId
-    ? `/workers/${encodeURIComponent(sessionHealthId)}`
-    : pathname;
+  // Build the worker's passport link
+  const workerPassportHref = sessionPortableHealthId
+    ? `/workers/${encodeURIComponent(sessionPortableHealthId)}`
+    : pathname; // fallback to current path if on /workers/xxx
+
+  const handleWorkerSignOut = () => {
+    signOut({ callbackUrl: "/login" });
+  };
 
   return (
     <>
-      {/* Top Utility Bar */}
+      {/* Official Government Identity Strip — Aarogya Setu / Digital India style */}
+      <div className="bg-[#0c2f10] text-white text-[11px]">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-1.5 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-white/85">
+            <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#f59e0b] text-[8px] font-extrabold text-[#0c2f10]" aria-hidden="true">
+              GoK
+            </span>
+            <span className="font-medium tracking-wide">
+              Government of Kerala <span className="text-white/50 mx-1">|</span> Department of Health &amp; Family Welfare
+            </span>
+          </div>
+          <div className="hidden sm:flex items-center gap-3 text-white/70">
+            <span>An Official Digital Health Initiative</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Top Utility Bar matching ArogyaRekha design */}
       <div className="bg-[#0f3e17] text-[#fffefc] text-xs border-b border-[#0c2f10]/40">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-2 flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-1.5 flex-wrap" role="group" aria-label="Choose language">
@@ -131,7 +155,7 @@ export function Navbar() {
 
             {/* Desktop Navigation Links — ROLE AWARE */}
             <div className="hidden lg:flex items-center space-x-7 text-[14px] text-[#222222]">
-              {isWorker ? (
+              {isWorkerMode ? (
                 /* WORKER AUTHENTIC NAV: Strict passport scope */
                 <>
                   <Link
@@ -283,7 +307,7 @@ export function Navbar() {
         {mobileMenuOpen && (
           <div className="lg:hidden border-t border-[#efeeeb] bg-[#fffefc] px-4 pt-3 pb-6 space-y-3 shadow-lg">
             <div className="grid grid-cols-2 gap-2 text-xs">
-              {isWorker ? (
+              {isWorkerMode ? (
                 /* WORKER MOBILE NAV */
                 <>
                   <Link

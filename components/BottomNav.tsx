@@ -30,18 +30,20 @@ export function BottomNav() {
     return null;
   }
 
-  // Detect worker role from authentic session
-  const userRole = (session?.user as any)?.role;
-  const isWorker = userRole === "WORKER";
-  const sessionHealthId = (session?.user as any)?.portableHealthId;
+  const sessionRole = (session?.user as any)?.role === "STAFF" ? "PROVIDER" : (session?.user as any)?.role;
+  const isWorkerSession = sessionRole === "WORKER";
+  const sessionPortableHealthId = (session?.user as any)?.portableHealthId as string | null;
+
+  // Detect worker mode: signed-in worker, or staff viewing a specific passport
+  const isWorkerMode = isWorkerSession || pathname.startsWith("/workers/");
 
   // Worker's passport link
-  const workerPassportHref = sessionHealthId
-    ? `/workers/${encodeURIComponent(sessionHealthId)}`
+  const workerPassportHref = sessionPortableHealthId
+    ? `/workers/${encodeURIComponent(sessionPortableHealthId)}`
     : pathname;
 
   // Role-aware nav items
-  const navItems = isWorker
+  const navItems = isWorkerMode
     ? [
         { href: workerPassportHref, label: "My Passport", icon: User },
         { href: "/quick-actions", label: t("quickActions"), icon: Zap },

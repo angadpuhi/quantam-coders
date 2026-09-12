@@ -1,38 +1,38 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateHealthId } from "@/lib/utils";
-import { getServerAuthSession, requireAuth } from "@/lib/auth";
+import { requireAuth, getServerAuthSession } from "@/lib/auth";
 
-// GET /api/workers - PROTECTED & ROLE-SCOPED:
-// - WORKER: Scoped strictly to their own profile (cannot query/list other workers)
-// - PROVIDER / ADMIN: Can query by portableHealthId, query 'q', or list facility workers
+// GET /api/workers - PROTECTED.
+// PROVIDER/ADMIN: can search by portableHealthId, keyword 'q', or list all workers.
+// WORKER: can only ever receive their own record, regardless of query params.
 export async function GET(request: Request) {
   try {
     const session = await getServerAuthSession();
-
     if (!session || !session.user) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized. You must sign in to view worker health data.",
-        },
+        { success: false, error: "Unauthorized. Please log in to view worker records." },
         { status: 401 }
       );
     }
 
-    const role = (session.user as any).role;
-    const sessionWorkerId = (session.user as any).workerId;
+    const role = session.user.role === "STAFF" ? "PROVIDER" : session.user.role;
 
-    // WORKER ROLE IS STRICTLY CONSTRAINED TO THEIR OWN RECORD
+    const { searchParams } = new URL(request.url);
+    const portableHealthId = searchParams.get("portableHealthId")?.trim();
+    const query = searchParams.get("q")?.trim();
+
+    // WORKER role: ignore any requested filters, always resolve to the caller's own record.
     if (role === "WORKER") {
+      const sessionWorkerId = (session.user as any).workerId as string | null;
       if (!sessionWorkerId) {
         return NextResponse.json(
-          { success: false, error: "Worker session does not have an associated worker ID." },
+          { success: false, error: "Worker session is missing a linked worker record." },
           { status: 403 }
         );
       }
 
-      const selfWorker = await prisma.worker.findUnique({
+      const worker = await prisma.worker.findUnique({
         where: { id: sessionWorkerId },
         include: {
           visits: {
@@ -50,24 +50,19 @@ export async function GET(request: Request) {
         },
       });
 
-      if (!selfWorker) {
-        return NextResponse.json(
-          { success: false, error: "Your worker profile was not found." },
-          { status: 404 }
-        );
-      }
-
       return NextResponse.json({
         success: true,
-        count: 1,
-        data: [selfWorker],
+        count: worker ? 1 : 0,
+        data: worker ? [worker] : [],
       });
     }
 
-    // PROVIDER / ADMIN ROLES: CLINICAL AND DIRECTORIAL LOOKUP
-    const { searchParams } = new URL(request.url);
-    const portableHealthId = searchParams.get("portableHealthId")?.trim();
-    const query = searchParams.get("q")?.trim();
+    if (role !== "PROVIDER" && role !== "ADMIN") {
+      return NextResponse.json(
+        { success: false, error: "Forbidden." },
+        { status: 403 }
+      );
+    }
 
     // 1. Search by exact portableHealthId if specified
     if (portableHealthId) {
@@ -105,7 +100,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // 2. Search by keyword or list facility workers
+    // 2. Search by keyword or list all (PROVIDER/ADMIN only)
     const workers = await prisma.worker.findMany({
       where: query
         ? {
