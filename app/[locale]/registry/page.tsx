@@ -18,8 +18,7 @@ import { KeralaMotif } from "@/components/KeralaMotif";
 import { WorkerRegistrationForm } from "@/components/WorkerRegistrationForm";
 import { WorkerSearchLookup } from "@/components/WorkerSearchLookup";
 
-import { useRouter } from "@/i18n/routing";
-import { useEffect } from "react";
+
 
 export default function RegistryPage() {
   const t = useTranslations("registry");

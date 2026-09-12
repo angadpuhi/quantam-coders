@@ -62,6 +62,7 @@ export async function GET(
           error: `Worker with ID or Portable Health ID '${identifier}' was not found.`,
         },
         { status: 404 }
+      );
     }
 
     // Aggregate summary statistics for clinical overview

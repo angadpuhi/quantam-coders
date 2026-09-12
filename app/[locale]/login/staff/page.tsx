@@ -48,7 +48,7 @@ function StaffLoginForm() {
     const targetUrl = callbackUrl || "/registry";
 
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn("provider-credentials", {
         redirect: false,
         email: email.trim(),
         password,
