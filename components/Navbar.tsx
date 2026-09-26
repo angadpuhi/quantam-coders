@@ -263,11 +263,11 @@ export function Navbar() {
                 <div className="flex items-center gap-2">
                   <div className="hidden sm:flex flex-col text-right">
                     <span className="text-xs font-semibold text-[#0f3e17] leading-tight">
-                      {session.user?.name || (isWorker ? "Worker" : "Staff")}
+                      {session.user?.name || (isWorkerSession ? "Worker" : "Staff")}
                     </span>
                     <span className="text-[10px] text-slate-500 flex items-center justify-end gap-1">
                       <Shield className="w-2.5 h-2.5 text-[#0f3e17]" />
-                      {userRole}
+                      {sessionRole}
                     </span>
                   </div>
                   <button
